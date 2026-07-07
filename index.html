@@ -154,6 +154,41 @@
     .modal{max-width:780px;width:100%;max-height:88vh;overflow:auto;background:var(--card);border-radius:24px;padding:22px;box-shadow:0 28px 80px rgba(0,0,0,.3)}
     .provider-box{border:1.5px solid var(--soft-line);border-radius:16px;padding:14px;margin-top:12px;background:var(--card2)}
     a{color:var(--main)}
+    /* ===== 育成パートナー ===== */
+    .partner-card{display:flex;gap:16px;align-items:center;background:linear-gradient(135deg,var(--soft) 0%,var(--card2) 100%);border:1.5px solid var(--soft-line);border-radius:var(--radius);padding:16px 18px;margin:14px 0}
+    .partner-emoji{font-size:64px;line-height:1;animation:partnerIdle 2.6s ease-in-out infinite;cursor:pointer;user-select:none}
+    .partner-emoji.sleepy{filter:grayscale(.75);opacity:.75;animation-duration:5.5s}
+    .partner-emoji.maxstage{animation:partnerIdle 2.6s ease-in-out infinite,partnerGlow 3s linear infinite}
+    .partner-emoji.tapjump{animation:partnerJump .8s ease}
+    @keyframes partnerIdle{0%,100%{transform:translateY(0)}50%{transform:translateY(-7px)}}
+    @keyframes partnerGlow{0%,100%{filter:drop-shadow(0 0 6px rgba(250,204,21,.7))}50%{filter:drop-shadow(0 0 18px rgba(250,204,21,1))}}
+    .partner-info{flex:1;min-width:0}
+    .partner-bubble{position:relative;background:var(--card);border:1.5px solid var(--line);border-radius:14px;padding:8px 12px;font-size:14px;margin-top:8px}
+    .p-bar{height:12px;background:var(--heat0);border-radius:999px;overflow:hidden;margin-top:6px}
+    .p-bar>div{height:100%;background:linear-gradient(90deg,#4ade80,#22c55e);border-radius:999px;transition:width .6s}
+    .egg-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-top:10px}
+    @media(max-width:650px){.egg-grid{grid-template-columns:1fr}}
+    .egg-card{border:2px solid var(--soft-line);background:var(--card);border-radius:16px;padding:14px 10px;text-align:center;cursor:pointer;font-family:inherit;font-size:15px;color:var(--text);transition:transform .15s}
+    .egg-card:hover{transform:translateY(-3px);border-color:var(--main)}
+    .egg-card .big{font-size:44px;display:block;animation:eggWiggle 2.2s ease-in-out infinite}
+    @keyframes eggWiggle{0%,80%,100%{transform:rotate(0)}84%{transform:rotate(-8deg)}88%{transform:rotate(8deg)}92%{transform:rotate(-5deg)}96%{transform:rotate(5deg)}}
+    .partner-float{position:fixed;left:14px;bottom:14px;z-index:59;font-size:44px;line-height:1;user-select:none;filter:drop-shadow(0 6px 12px rgba(0,0,0,.25));animation:partnerIdle 2.6s ease-in-out infinite}
+    .partner-float .pf-bubble{position:absolute;left:44px;bottom:40px;background:var(--card);color:var(--text);border:1.5px solid var(--line);border-radius:12px;padding:5px 10px;font-size:13px;font-weight:700;white-space:nowrap;opacity:0;transition:opacity .25s;pointer-events:none}
+    .partner-float.talk .pf-bubble{opacity:1}
+    .partner-float.jump{animation:partnerJump .8s ease}
+    .partner-float.sad{animation:partnerSad .8s ease}
+    @keyframes partnerJump{0%{transform:translateY(0)}30%{transform:translateY(-26px) rotate(-8deg)}55%{transform:translateY(0)}70%{transform:translateY(-12px)}100%{transform:translateY(0)}}
+    @keyframes partnerSad{0%,100%{transform:translateX(0)}20%{transform:translateX(-7px) rotate(-4deg)}40%{transform:translateX(7px) rotate(4deg)}60%{transform:translateX(-5px)}80%{transform:translateX(5px)}}
+    .evo-fx{position:fixed;inset:0;z-index:80;display:flex;align-items:center;justify-content:center;background:rgba(15,23,42,.78);animation:evoFade .3s ease;cursor:pointer}
+    @keyframes evoFade{from{opacity:0}to{opacity:1}}
+    .evo-box{text-align:center;color:#fff;padding:20px}
+    .evo-stage{font-size:100px;line-height:1.25;display:inline-block}
+    .evo-stage.evo-old{animation:evoShake .9s ease forwards}
+    .evo-stage.evo-new{animation:evoPop 1s cubic-bezier(.2,1.4,.4,1) forwards;filter:drop-shadow(0 0 26px rgba(250,204,21,.95))}
+    @keyframes evoShake{0%{transform:scale(1)}25%{transform:scale(1.08) rotate(-7deg)}50%{transform:scale(1.15) rotate(7deg)}75%{transform:scale(1.25) rotate(-5deg)}100%{transform:scale(.1);opacity:0}}
+    @keyframes evoPop{0%{transform:scale(0) rotate(-25deg)}60%{transform:scale(1.3)}100%{transform:scale(1)}}
+    .evo-title{font-size:26px;font-weight:900;margin-top:8px}
+    .evo-sub{font-size:17px;margin-top:6px;opacity:.95}
     button,.btn,input[type="radio"]+span{touch-action:manipulation;-webkit-tap-highlight-color:transparent}
     @supports(padding:max(0px)){
       body{padding-left:env(safe-area-inset-left);padding-right:env(safe-area-inset-right)}
@@ -266,7 +301,7 @@
         aiEnabled:true,dailyGoal:10,theme:"light",fontScale:"normal",voiceURI:"",sfxOn:true,bgmOn:true,pomoWork:25,pomoBreak:5
       },
       app:{screen:"home",selectedCourse:null,draftSetup:{},session:null,lastSavedAt:null},
-      records:{history:[],mistakes:[],totalAnswered:0,totalCorrect:0,totalHints:0,seenQuestions:{},mastery:{},daily:{},streakCurrent:0,streakBest:0,lastStudyDate:null,xp:0,badges:{},graduatedCount:0,hadPerfect:false,studySeconds:0,dailyTime:{},pomoCount:0}
+      records:{history:[],mistakes:[],totalAnswered:0,totalCorrect:0,totalHints:0,seenQuestions:{},mastery:{},daily:{},streakCurrent:0,streakBest:0,lastStudyDate:null,xp:0,badges:{},graduatedCount:0,hadPerfect:false,studySeconds:0,dailyTime:{},pomoCount:0,partner:{species:null,name:"",energy:0}}
     };
 
     const SYSTEM_PROMPT = `あなたは「勉強AIボットくん」です。小学4年生〜中学3年生の勉強をサポートします。
@@ -389,7 +424,7 @@
       }catch{}
       return clone(DEFAULT_STATE);
     }
-    function saveState(){if(!registry.activeUserId)return;state.app.lastSavedAt=new Date().toISOString();localStorage.setItem(userKey(registry.activeUserId),JSON.stringify(state));renderSidePanels();updateAIBadge();updateUserButton();}
+    function saveState(){if(!registry.activeUserId)return;state.app.lastSavedAt=new Date().toISOString();localStorage.setItem(userKey(registry.activeUserId),JSON.stringify(state));renderSidePanels();updateAIBadge();updateUserButton();updatePartnerFloat();}
     function switchUser(id){
       if(!registry.users.some(u=>u.id===id))return;
       registry.activeUserId=id;saveRegistry();
@@ -536,6 +571,7 @@
       d.innerHTML=`<div class="stamp">${correct?"⭕<br>正解！":"❌<br>ざんねん"}</div>`;
       document.body.appendChild(d);
       setTimeout(()=>d.remove(),950);
+      partnerReact(correct);
     }
     function scrollToFeedback(){requestAnimationFrame(()=>{const list=$("questionMessages");const el=(list&&list.lastElementChild)||null;if(el)el.scrollIntoView({behavior:"smooth",block:"center"});});}
     function scrollToQuestionTop(){requestAnimationFrame(()=>{const box=document.querySelector(".question-box")||mainPanel;box.scrollIntoView({behavior:"smooth",block:"start"});});}
@@ -636,6 +672,7 @@
     function addXp(amount,s){
       const before=levelFromXp(state.records.xp||0);
       state.records.xp=(state.records.xp||0)+amount;
+      feedPartner(amount);
       if(s)s.xpEarned=(s.xpEarned||0)+amount;
       const after=levelFromXp(state.records.xp);
       if(after.level>before.level){showToast(`<div class="lv-big">🎉 レベルアップ！</div><div>Lv.${after.level}　${levelTitle(after.level)}</div>`,"levelup");sfxLevelUp();}
@@ -667,10 +704,114 @@
       {id:"pomo_20",icon:"🥫",name:"トマト農家",desc:"ポモドーロを20回完走した",cond:()=>(state.records.pomoCount||0)>=20},
       {id:"time_10h",icon:"⏱️",name:"累計10時間",desc:"勉強時間の累計が10時間をこえた",cond:()=>(state.records.studySeconds||0)>=36000},
       {id:"time_50h",icon:"🗻",name:"累計50時間",desc:"勉強時間の累計が50時間をこえた（富士山登山5回分！）",cond:()=>(state.records.studySeconds||0)>=180000},
+      {id:"partner_hatch",icon:"🐣",name:"たまごがかえった！",desc:"そだてるパートナーが たまごから生まれた",cond:()=>partnerStageIdx()>=1},
+      {id:"partner_evolve3",icon:"🧬",name:"ぐんぐん成長",desc:"パートナーが3回進化した",cond:()=>partnerStageIdx()>=3},
+      {id:"partner_final",icon:"🌈",name:"でんせつ誕生",desc:"パートナーが最終進化した",cond:()=>partnerStageIdx()>=5},
     ];
     function checkBadges(){
       state.records.badges=state.records.badges||{};
       BADGES.forEach(b=>{try{if(!state.records.badges[b.id]&&b.cond()){state.records.badges[b.id]=new Date().toISOString();showToast(`<div class="lv-big">${b.icon} 実績かくとく！</div><div>${escapeHtml(b.name)}</div>`,"badge");sfxBadge();}}catch{}});
+    }
+
+    // ===== 育成パートナー：勉強でXPをかせぐと たまごがかえって進化する =====
+    const PARTNER_SPECIES={
+      leaf:{label:"はっぱ族",stages:[{e:"🥚",name:"たまご"},{e:"🌱",name:"ふたば"},{e:"🌿",name:"わかば"},{e:"🪴",name:"すくすくの木"},{e:"🌳",name:"おおきな木"},{e:"🌸",name:"でんせつの世界樹"}]},
+      dragon:{label:"ドラゴン族",stages:[{e:"🥚",name:"たまご"},{e:"🐣",name:"ちびドラ"},{e:"🦖",name:"リトルドラゴン"},{e:"🐲",name:"ドラゴン"},{e:"🐉",name:"グレートドラゴン"},{e:"🐉",name:"でんせつの神竜"}]},
+      star:{label:"うちゅう族",stages:[{e:"🥚",name:"たまご"},{e:"⭐",name:"ほしのこ"},{e:"🌟",name:"かがやきスター"},{e:"🌙",name:"みかづきん"},{e:"🪐",name:"プラネット"},{e:"🌌",name:"でんせつのギャラクシー"}]}
+    };
+    const PARTNER_THRESHOLDS=[0,30,150,400,900,1800]; // 勉強エナジー（=XP）累計での進化ライン
+    function partner(){state.records.partner=state.records.partner||{species:null,name:"",energy:0};return state.records.partner;}
+    function partnerStageIdx(){const p=partner();if(!p.species)return -1;const e=p.energy||0;let i=0;PARTNER_THRESHOLDS.forEach((t,idx)=>{if(e>=t)i=idx;});return i;}
+    function partnerStage(){const p=partner();const sp=PARTNER_SPECIES[p.species];return sp?sp.stages[partnerStageIdx()]:null;}
+    function feedPartner(amount){
+      const p=partner();if(!p.species||!amount)return;
+      const before=partnerStageIdx();
+      p.energy=(p.energy||0)+amount;
+      const after=partnerStageIdx();
+      if(after>before){const sp=PARTNER_SPECIES[p.species];setTimeout(()=>showEvolutionFx(sp.stages[before].e,sp.stages[after].e,sp.stages[after].name,p.name||sp.label,before===0),1050);}
+    }
+    function showEvolutionFx(oldE,newE,newName,pname,isHatch){
+      const d=document.createElement("div");d.className="evo-fx";
+      d.innerHTML=`<div class="evo-box"><div class="evo-stage evo-old">${oldE}</div><div class="evo-title"></div><div class="evo-sub"></div></div>`;
+      d.addEventListener("click",()=>d.remove());
+      document.body.appendChild(d);
+      sfxLevelUp();
+      setTimeout(()=>{if(!d.isConnected)return;
+        const st=d.querySelector(".evo-stage");st.textContent=newE;st.className="evo-stage evo-new";
+        d.querySelector(".evo-title").textContent=isHatch?"🎉 たまごが かえった！":"✨ しんか！ ✨";
+        d.querySelector(".evo-sub").textContent=isHatch?`${pname} が うまれた！いっしょに 成長しよう！`:`${pname} は ${newName} に しんかした！`;
+        sfxBadge();
+      },900);
+      setTimeout(()=>{d.remove();updatePartnerFloat();if(state.app.screen==="home")renderHome();},4800);
+    }
+    function partnerMood(){
+      if(partnerStageIdx()<=0)return "egg";
+      const last=state.records.lastStudyDate;if(!last)return "genki";
+      if(last>=dayKey(addDays(new Date(),-1)))return "genki";
+      if(last>=dayKey(addDays(new Date(),-3)))return "hungry";
+      return "sleepy";
+    }
+    function partnerLine(){
+      const p=partner();const mood=partnerMood();
+      if(mood==="egg")return pick(["なかで なにかが うごいてる…！もんだいをとくと あたたまるみたい。","そーっと…そーっと…。勉強エナジーで もうすぐ かえりそう！"]);
+      if(mood==="sleepy")return "zzz…zzz…（しばらく勉強してないので ねむってしまった。1問とくと おきるよ！）";
+      if(mood==="hungry")return pick(["おなかペコペコ…。1問といて 勉強エナジーちょうだい！","ごはんまだかな〜？もんだい1問で げんき100ばい！"]);
+      const due=dueMistakes().length,today=state.records.daily?.[dayKey()]||0,goal=state.settings.dailyGoal||10;
+      const idx=partnerStageIdx(),next=PARTNER_THRESHOLDS[idx+1];
+      const lines=["きょうも いっしょに がんばろう！","もんだいを とくほど ぼくは 大きくなるよ！","キミが勉強すると うれしいんだ〜！"];
+      if(next&&next-(p.energy||0)<=40)lines.push("…からだが ムズムズする。もうすぐ しんかできそう！","しんかまで あとちょっと！たのむぞ〜！");
+      if(due>0)lines.push(`復習まちの問題が ${due}問 あるよ。いっしょに やっつけよう！`);
+      if(today>=goal)lines.push("きょうの目標クリア！キミは ほんとにすごいなあ。");
+      else if(goal-today<=3&&today>0)lines.push(`目標まで あと${goal-today}問！いけるいける！`);
+      if(idx>=5)lines.push("さいしゅう進化しても、キミとの勉強は つづくよ！");
+      return pick(lines);
+    }
+    function renderPartnerCard(){
+      const p=partner();
+      if(!p.species){
+        return `<div class="partner-card" style="display:block"><div style="font-weight:800">🎁 そだてるパートナーが やってきた！</div><div class="small muted" style="margin-top:4px">たまごをひとつ えらんでね。勉強してXPをかせぐと、たまごがかえって どんどん進化するよ。</div><div class="egg-grid">${Object.entries(PARTNER_SPECIES).map(([k,sp])=>`<button class="egg-card" data-egg="${k}"><span class="big">🥚</span><strong>${sp.label}</strong><span class="small muted" style="display:block">とちゅうで ${sp.stages[2].e} になるらしい。さいごのすがたは…ひみつ！</span></button>`).join("")}</div></div>`;
+      }
+      const sp=PARTNER_SPECIES[p.species],idx=partnerStageIdx(),st=sp.stages[idx],mood=partnerMood();
+      const base=PARTNER_THRESHOLDS[idx],nextT=PARTNER_THRESHOLDS[idx+1];
+      const pct=nextT?Math.min(100,Math.round(((p.energy||0)-base)/(nextT-base)*100)):100;
+      return `<div class="partner-card"><div class="partner-emoji ${mood==="sleepy"?"sleepy":""}${idx>=5?" maxstage":""}" id="partnerEmoji" title="なでてあげよう">${st.e}</div><div class="partner-info"><div style="font-weight:800">${escapeHtml(p.name||sp.label)} <span class="small muted">（${st.name}・${sp.label}）</span> <button class="btn icon" id="partnerRename" title="なまえを変える" style="padding:2px 8px;font-size:12px">✏️</button></div>${nextT?`<div class="p-bar"><div style="width:${pct}%"></div></div><div class="small muted">つぎの進化まで あと <b>${nextT-(p.energy||0)}</b> 勉強エナジー（正解するほどたまる）</div>`:`<div class="small" style="color:var(--good);font-weight:700">🌈 さいしゅう進化 MAX！</div>`}<div class="partner-bubble">💬 ${escapeHtml(partnerLine())}</div></div></div>`;
+    }
+    function bindPartnerCard(){
+      document.querySelectorAll("[data-egg]").forEach(b=>b.addEventListener("click",()=>{
+        const k=b.dataset.egg,sp=PARTNER_SPECIES[k],p=partner();
+        p.species=k;p.energy=0;
+        const def={leaf:"はっぱちゃん",dragon:"ドラたん",star:"キラリン"}[k]||sp.label;
+        const name=prompt("たまごに なまえをつけよう！",def);
+        p.name=(name||def).trim().slice(0,12)||def;
+        saveState();sfxBadge();
+        showToast(`<div class="lv-big">🥚 ${escapeHtml(p.name)} をむかえたよ！</div><div>勉強してXPをかせぐと たまごがかえる…！</div>`);
+        renderHome();
+      }));
+      if($("partnerRename"))$("partnerRename").addEventListener("click",()=>{const p=partner();const n=prompt("あたらしい なまえは？",p.name||"");if(n&&n.trim()){p.name=n.trim().slice(0,12);saveState();renderHome();}});
+      if($("partnerEmoji"))$("partnerEmoji").addEventListener("click",e=>{const el=e.currentTarget;el.classList.remove("tapjump");void el.offsetWidth;el.classList.add("tapjump");sfxOnQ();});
+    }
+    function updatePartnerFloat(){
+      let f=document.getElementById("partnerFloat");
+      const p=partner();
+      const show=state.app.screen==="study"&&p.species&&partnerStageIdx()>=1;
+      if(!show){if(f)f.remove();return;}
+      if(!f){f=document.createElement("div");f.id="partnerFloat";f.className="partner-float";f.innerHTML=`<span class="pf-emoji"></span><span class="pf-bubble"></span>`;document.body.appendChild(f);}
+      f.querySelector(".pf-emoji").textContent=partnerStage().e;
+    }
+    let partnerTalkTimer=null;
+    function partnerReact(correct){
+      const f=document.getElementById("partnerFloat");if(!f)return;
+      f.classList.remove("jump","sad");void f.offsetWidth;
+      f.classList.add(correct?"jump":"sad");
+      const line=correct?pick(["ナイス！","やったー！","てんさい！","その調子！","うまい！"]):pick(["ドンマイ！","つぎいこ、つぎ！","まちがいは 成長のもと！","おしい！"]);
+      f.querySelector(".pf-bubble").textContent=(correct?"❤️ ":"")+line;
+      f.classList.add("talk");
+      clearTimeout(partnerTalkTimer);partnerTalkTimer=setTimeout(()=>{f.classList.remove("talk");},2200);
+    }
+    function partnerResultHtml(s){
+      const p=partner();if(!p.species)return "";
+      const sp=PARTNER_SPECIES[p.species],idx=partnerStageIdx(),st=sp.stages[idx],nextT=PARTNER_THRESHOLDS[idx+1];
+      return `<div class="dash-item" style="margin-top:12px"><span class="label">🐾 そだてるパートナー</span><div style="display:flex;align-items:center;gap:12px"><span style="font-size:40px">${st.e}</span><div style="flex:1"><b>${escapeHtml(p.name||sp.label)}</b> <span class="small muted">（${st.name}）</span><div class="small">きょうの勉強で <b>+${s.xpEarned||0} エナジー</b> 成長！${nextT?`　つぎの進化まで あと${nextT-(p.energy||0)}`:"　🌈 MAX"}</div></div></div></div>`;
     }
 
     function renderHome(){state.app.screen="home";saveState();stopBgm();const last=state.app.session;
@@ -679,6 +820,7 @@
       const lv=levelFromXp(state.records.xp||0),lvPct=Math.round(lv.into/lv.need*100);
       mainPanel.innerHTML=`
       <div class="hero"><h2>こんにちは、${escapeHtml(state.profile?.name||"")}さん！</h2><div class="muted">${escapeHtml(currentGrade())}に合わせた問題を出すよ。今日はどのコースで勉強する？</div><div class="chips"><span class="chip">🤖 Gemini AI対応</span><span class="chip">🧠 苦手に個別最適化</span><span class="chip">📆 間隔反復で復習</span><span class="chip">⚡ XP・レベル・実績</span><span class="chip">💾 自動セーブ</span></div></div>
+      ${renderPartnerCard()}
       <div class="dash">
         <div class="dash-item"><span class="label">${levelTitle(lv.level)}</span><span class="big-num">Lv.${lv.level}</span><div class="xp-bar"><div style="width:${lvPct}%"></div></div><span class="small muted">あと ${lv.need-lv.into}XP でLv.${lv.level+1}</span></div>
         <div class="dash-item"><span class="label">🔥 連続学習</span><span class="big-num">${streak}<span style="font-size:14px;font-weight:600"> 日</span></span><span class="small muted">最高記録 ${state.records.streakBest||0}日</span></div>
@@ -694,6 +836,7 @@
         ${courseCard("quiz","⚡ ⑤ クイズモード","範囲・難易度・問題数を決めてテンポよくクイズ。")}
       </div>`;
       document.querySelectorAll("[data-course]").forEach(b=>b.addEventListener("click",()=>startSetup(b.dataset.course)));
+      bindPartnerCard();
       if($("continueBtn")) $("continueBtn").addEventListener("click",()=>{state.app.screen="study";saveState();renderStudy();});
       if($("dueReviewBtn")) $("dueReviewBtn").addEventListener("click",()=>startSetup("mistakes"));
     }
@@ -918,6 +1061,7 @@
       const lv=levelFromXp(state.records.xp||0),lvPct=Math.round(lv.into/lv.need*100);
       mainPanel.innerHTML=`<h2 class="panel-title">📊 今日の学習記録</h2><div class="stat-grid"><div class="stat"><div class="num">${s.totalQuestions}</div><div class="label">問題数</div></div><div class="stat"><div class="num">${s.score}</div><div class="label">正解</div></div><div class="stat"><div class="num">${acc}%</div><div class="label">正答率</div></div><div class="stat"><div class="num" style="color:#f59e0b">+${s.xpEarned||0}</div><div class="label">獲得XP</div></div></div>
       <div class="dash-item" style="margin-top:12px"><span class="label">${levelTitle(lv.level)}</span><span class="big-num">Lv.${lv.level}</span><div class="xp-bar"><div style="width:${lvPct}%"></div></div><span class="small muted">あと ${lv.need-lv.into}XP でLv.${lv.level+1}</span></div>
+      ${partnerResultHtml(s)}
       <div class="message bot" style="margin-top:14px">コース：${escapeHtml(COURSE_LABELS[s.course])}\n教科：${escapeHtml(s.subject)}\n範囲：${escapeHtml(s.unit)}\nヒント使用：${s.hintUsed}回\n🔥 連続学習：${effectiveStreak()}日　🎯 今日：${today}/${goal}問${today>=goal?"（目標達成！）":""}\n⏱️ 今日の勉強時間：${fmtDuration((state.records.dailyTime||{})[dayKey()]||0)}（累計 ${fmtDuration(state.records.studySeconds||0)}）\n\n${escapeHtml(makeAdvice(s))}\n\nこの内容は自動で保存してあります。</div>
       ${canUseAI()?`<div class="row" style="margin-top:12px"><button class="btn good" id="aiAdviceBtn">🤖 AIコーチの個別アドバイスを見る</button></div><div id="aiAdviceArea" class="message-list"></div>`:""}
       <div class="row" style="margin-top:14px"><button class="btn primary" id="againSameBtn">同じ設定でもう一度</button><button class="btn" id="reviewWrongFromResult">間違えた問題を復習</button><button class="btn" id="homeFromResult">ホームへ</button></div>`;

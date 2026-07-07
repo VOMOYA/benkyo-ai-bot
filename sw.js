@@ -1,7 +1,7 @@
 // 勉強AIボットくん Service Worker
 // ネットワーク優先（常に最新版を取得）、オフライン時はキャッシュにフォールバック。
 // Gemini API等の外部オリジンへのリクエストには関与しない。
-const CACHE = "benkyo-bot-v1";
+const CACHE = "benkyo-bot-v2";
 const ASSETS = ["./", "./index.html", "./manifest.webmanifest", "./icon-192.png", "./icon-512.png", "./icon-180.png"];
 
 self.addEventListener("install", e => {
