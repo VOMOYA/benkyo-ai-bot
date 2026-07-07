@@ -1,0 +1,1060 @@
+<!doctype html>
+<html lang="ja">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+  <title>勉強AIボットくん</title>
+  <meta name="theme-color" content="#2563eb" />
+  <link rel="manifest" href="manifest.webmanifest" />
+  <link rel="icon" href="icon-192.png" />
+  <link rel="apple-touch-icon" href="icon-180.png" />
+  <meta name="mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-status-bar-style" content="default" />
+  <meta name="apple-mobile-web-app-title" content="勉強ボット" />
+  <style>
+    :root{
+      --bg:#f6f7fb;--card:#fff;--card2:#f8fbff;--text:#172033;--muted:#5b6577;--line:#e6e8ef;
+      --main:#2563eb;--main2:#1d4ed8;--soft:#eef4ff;--soft-line:#dbe7ff;--soft-text:#1e3a8a;
+      --good:#0f766e;--good-bg:#ecfdf3;--good-line:#a7f3d0;--good-text:#064e3b;
+      --bad:#b42318;--bad-bg:#fff1f2;--bad-line:#fecdd3;--bad-text:#7f1d1d;
+      --warn:#a16207;--warn-bg:#fffbeb;--warn-line:#fde68a;--warn-text:#78350f;
+      --shadow:0 18px 45px rgba(23,32,51,.08);--radius:20px;
+      --heat0:#edf0f7;--heat1:#bfdbfe;--heat2:#60a5fa;--heat3:#1d4ed8;
+    }
+    html[data-theme="dark"]{
+      --bg:#0f1524;--card:#182036;--card2:#1a2440;--text:#e8ecf5;--muted:#9aa5bb;--line:#2a3247;
+      --main:#3b82f6;--main2:#2563eb;--soft:#1c2a4a;--soft-line:#2c3f6b;--soft-text:#bcd3ff;
+      --good:#34d399;--good-bg:#0e2a22;--good-line:#14532d;--good-text:#a7f3d0;
+      --bad:#f87171;--bad-bg:#31161a;--bad-line:#7f1d1d;--bad-text:#fecaca;
+      --warn:#facc15;--warn-bg:#2e2609;--warn-line:#713f12;--warn-text:#fde68a;
+      --shadow:0 18px 45px rgba(0,0,0,.35);
+      --heat0:#232c44;--heat1:#1e3a8a;--heat2:#2563eb;--heat3:#60a5fa;
+    }
+    *{box-sizing:border-box}
+    body{margin:0;font-family:system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI","Hiragino Kaku Gothic ProN","Yu Gothic UI",sans-serif;background:var(--bg);color:var(--text);line-height:1.75;font-size:16.5px}
+    html[data-theme="light"] body{background:radial-gradient(circle at top left,#e8f0ff 0,#f6f7fb 45%,#fafafa 100%)}
+    html[data-font="large"] body{font-size:19px}
+    html[data-font="large"] .q-title{font-size:26px}
+    html[data-font="large"] .btn{min-height:50px}
+    button,input,select,textarea{font:inherit;color:inherit} button{cursor:pointer}
+    .app{max-width:1180px;margin:0 auto;padding:20px 18px 40px}
+    .topbar{display:flex;justify-content:space-between;align-items:center;gap:14px;margin-bottom:18px;flex-wrap:wrap}
+    .brand{display:flex;align-items:center;gap:12px}
+    .logo{width:52px;height:52px;border-radius:16px;display:grid;place-items:center;background:linear-gradient(135deg,#2563eb,#22c55e);color:#fff;font-size:22px;font-weight:900;box-shadow:var(--shadow);flex-shrink:0}
+    h1{font-size:22px;margin:0;line-height:1.25}.subtitle{font-size:13px;color:var(--muted);margin-top:3px}
+    .top-actions{display:flex;gap:8px;flex-wrap:wrap;justify-content:flex-end;align-items:center}
+    .btn{border:1.5px solid var(--line);background:var(--card);color:var(--text);border-radius:999px;padding:10px 16px;min-height:46px;font-weight:600;box-shadow:0 4px 14px rgba(23,32,51,.05);transition:.15s}
+    .btn:hover{transform:translateY(-1px);border-color:var(--main)}
+    .btn.primary{background:var(--main);border-color:var(--main);color:#fff}.btn.primary:hover{background:var(--main2)}
+    .btn.danger{border-color:var(--bad-line);color:var(--bad)}
+    .btn.good{background:var(--good-bg);border-color:var(--good-line);color:var(--good)}
+    .btn.warn{background:var(--warn-bg);border-color:var(--warn-line);color:var(--warn)}
+    .btn.icon{padding:8px 12px;min-height:42px;font-size:17px}
+    .btn.big{font-size:1.05em;padding:13px 22px}
+    .grid{display:grid;grid-template-columns:1.1fr .9fr;gap:18px}
+    @media(max-width:940px){.grid{grid-template-columns:1fr}}
+    .card{background:var(--card);border:1px solid var(--line);border-radius:var(--radius);box-shadow:var(--shadow);padding:20px}
+    .panel-title{font-size:18px;font-weight:800;margin:0 0 12px;display:flex;align-items:center;gap:8px}
+    .muted{color:var(--muted)}.small{font-size:13px}
+    .stack{display:flex;flex-direction:column;gap:14px}
+    .row{display:flex;gap:10px;align-items:center;flex-wrap:wrap}
+    .space{display:flex;justify-content:space-between;gap:10px;align-items:center;flex-wrap:wrap}
+    .hero{padding:24px;border-radius:24px;background:linear-gradient(135deg,var(--card),var(--soft));border:1px solid var(--soft-line);margin-bottom:16px}
+    .hero h2{font-size:24px;margin:0 0 6px;line-height:1.3}
+    .chips{display:flex;gap:8px;flex-wrap:wrap;margin-top:12px}
+    .chip{display:inline-flex;align-items:center;font-size:12.5px;font-weight:600;border-radius:999px;padding:5px 11px;background:var(--soft);color:var(--soft-text);border:1px solid var(--soft-line)}
+    .dash{display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:10px;margin-bottom:16px}
+    @media(max-width:650px){.dash{grid-template-columns:1fr}}
+    .dash-item{border:1px solid var(--line);border-radius:18px;background:var(--card);padding:14px 16px;display:flex;flex-direction:column;gap:4px}
+    .dash-item .big-num{font-size:26px;font-weight:850;line-height:1.2}
+    .dash-item .label{font-size:12.5px;color:var(--muted);font-weight:600}
+    .goal-bar{height:8px;background:var(--heat0);border-radius:999px;overflow:hidden;margin-top:6px}
+    .goal-bar>div{height:100%;background:linear-gradient(90deg,#22c55e,#16a34a);transition:.3s}
+    .course-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px}
+    @media(max-width:650px){.course-grid{grid-template-columns:1fr}}
+    .course-card{text-align:left;border:1.5px solid var(--line);background:var(--card);border-radius:18px;padding:18px;min-height:112px;transition:.15s;box-shadow:0 5px 16px rgba(23,32,51,.04)}
+    .course-card:hover{transform:translateY(-2px);border-color:var(--main)}
+    .course-card strong{display:block;font-size:17px;margin-bottom:6px}
+    .course-card span{font-size:13.5px;color:var(--muted);line-height:1.6}
+    .setup-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:14px}
+    @media(max-width:650px){.setup-grid{grid-template-columns:1fr}}
+    label{display:block;font-weight:700;font-size:13.5px;margin-bottom:6px}
+    input,select,textarea{width:100%;border:1.5px solid var(--line);background:var(--card);color:var(--text);border-radius:14px;padding:12px 14px;outline:none;font-size:1em}
+    textarea{min-height:120px;resize:vertical}
+    input:focus,select:focus,textarea:focus{border-color:var(--main);box-shadow:0 0 0 4px rgba(37,99,235,.13)}
+    .progress-wrap{height:12px;background:var(--heat0);border-radius:999px;overflow:hidden;margin:12px 0 6px}
+    .progress-bar{height:100%;background:linear-gradient(90deg,#2563eb,#22c55e);width:0%;transition:.25s}
+    .question-box{border:1.5px solid var(--soft-line);background:var(--card2);border-radius:20px;padding:20px;margin-top:14px}
+    .q-meta{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:12px}
+    .q-title{font-size:22px;font-weight:800;margin:0 0 14px;white-space:pre-wrap;line-height:1.6}
+    .choices{display:grid;gap:10px;margin:12px 0}
+    .choice{border:1.5px solid var(--line);border-radius:14px;padding:13px 15px;background:var(--card);display:flex;gap:11px;align-items:flex-start;cursor:pointer;transition:.12s;font-size:1.02em}
+    .choice:hover{border-color:var(--main)}
+    .choice:has(input:checked){border-color:var(--main);background:var(--soft);box-shadow:0 0 0 3px rgba(37,99,235,.12)}
+    .choice input{width:20px;height:20px;margin-top:4px;accent-color:var(--main);flex-shrink:0}
+    .answer-form{display:flex;gap:10px;margin-top:14px}
+    .answer-form input{flex:1;font-size:1.05em}
+    @media(max-width:650px){.answer-form{flex-direction:column}}
+    .message-list{display:flex;flex-direction:column;gap:10px;margin-top:12px}
+    .message{border-radius:16px;padding:13px 15px;border:1px solid var(--line);background:var(--card);white-space:pre-wrap;line-height:1.75}
+    .message.bot{background:var(--soft);border-color:var(--soft-line)}
+    .message.user{background:var(--card2)}
+    .message.good{background:var(--good-bg);border-color:var(--good-line);color:var(--good-text)}
+    .message.bad{background:var(--bad-bg);border-color:var(--bad-line);color:var(--bad-text)}
+    .message.warn{background:var(--warn-bg);border-color:var(--warn-line);color:var(--warn-text)}
+    .chat-area{margin-top:12px;border:1.5px dashed var(--soft-line);border-radius:16px;padding:12px;background:var(--card)}
+    .stat-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px;margin-top:10px}
+    .stat{border:1px solid var(--line);border-radius:16px;background:var(--card);padding:13px}
+    .stat .num{font-size:24px;font-weight:850}.stat .label{font-size:12.5px;color:var(--muted);font-weight:600}
+    .mastery-row{margin-top:10px}
+    .mastery-row .m-label{display:flex;justify-content:space-between;font-size:12.5px;font-weight:600;margin-bottom:3px}
+    .m-bar{height:9px;background:var(--heat0);border-radius:999px;overflow:hidden}
+    .m-bar>div{height:100%;border-radius:999px}
+    .heatmap{display:grid;grid-template-columns:repeat(7,1fr);gap:5px;margin-top:10px}
+    .heat-cell{aspect-ratio:1;border-radius:6px;background:var(--heat0);position:relative}
+    .heat-cell.lv1{background:var(--heat1)}.heat-cell.lv2{background:var(--heat2)}.heat-cell.lv3{background:var(--heat3)}
+    .heat-legend{display:flex;gap:6px;align-items:center;font-size:11.5px;color:var(--muted);margin-top:8px}
+    .heat-legend i{width:13px;height:13px;border-radius:4px;display:inline-block}
+    .history-list,.mistake-list{display:flex;flex-direction:column;gap:8px;max-height:340px;overflow:auto;padding-right:4px}
+    .list-item{border:1px solid var(--line);border-radius:15px;background:var(--card);padding:12px;font-size:13.5px;line-height:1.6}
+    .list-item strong{display:block;margin-bottom:4px}
+    .due-tag{font-size:11px;font-weight:700;border-radius:999px;padding:2px 8px;background:var(--bad-bg);color:var(--bad);border:1px solid var(--bad-line);margin-left:6px}
+    .ai-badge{font-size:12.5px;font-weight:600;border-radius:999px;padding:5px 10px;border:1px solid var(--line);background:var(--card)}
+    .ai-badge.on{background:var(--good-bg);color:var(--good);border-color:var(--good-line)}
+    .ai-badge.off{background:var(--warn-bg);color:var(--warn);border-color:var(--warn-line)}
+    .footer-note{font-size:12px;color:var(--muted);margin-top:16px}
+    .loader{display:inline-block;width:16px;height:16px;border-radius:50%;border:2px solid var(--soft-line);border-top-color:var(--main);animation:spin .8s linear infinite;vertical-align:-3px;margin-right:6px}
+    @keyframes spin{to{transform:rotate(360deg)}}
+    .xp-bar{height:10px;background:var(--heat0);border-radius:999px;overflow:hidden;margin-top:6px}
+    .xp-bar>div{height:100%;background:linear-gradient(90deg,#f59e0b,#f97316);transition:.3s}
+    .badge-row{display:flex;gap:8px;flex-wrap:wrap;margin-top:8px}
+    .badge-item{font-size:22px;background:var(--soft);border:1px solid var(--soft-line);border-radius:12px;padding:6px 9px;cursor:default}
+    .badge-item.locked{opacity:.32;filter:grayscale(1)}
+    .toast-pop{position:fixed;left:50%;bottom:34px;transform:translate(-50%,24px) scale(.95);opacity:0;z-index:100;background:var(--card);border:2px solid var(--main);border-radius:18px;padding:14px 26px;box-shadow:0 20px 60px rgba(0,0,0,.3);text-align:center;font-weight:700;transition:.35s cubic-bezier(.2,1.4,.4,1);pointer-events:none;max-width:90vw}
+    .toast-pop.show{opacity:1;transform:translate(-50%,0) scale(1)}
+    .toast-pop.levelup{border-color:#f59e0b;background:linear-gradient(135deg,var(--card),#fff3d6)}
+    html[data-theme="dark"] .toast-pop.levelup{background:linear-gradient(135deg,var(--card),#3a2e08)}
+    .toast-pop.badge{border-color:#22c55e}
+    .toast-pop .lv-big{font-size:20px}
+    .btn.off{opacity:.4}
+    .judge-fx{position:fixed;inset:0;display:grid;place-items:center;z-index:95;pointer-events:none}
+    .judge-fx .stamp{font-size:min(15vw,96px);font-weight:900;line-height:1.2;text-align:center;opacity:0}
+    .judge-fx.correct .stamp{color:#22c55e;text-shadow:0 6px 30px rgba(34,197,94,.45);animation:stampIn .9s ease forwards}
+    .judge-fx.wrong .stamp{color:#ef4444;text-shadow:0 6px 30px rgba(239,68,68,.45);animation:stampShake .9s ease forwards}
+    @keyframes stampIn{0%{opacity:0;transform:scale(2)}22%{opacity:1;transform:scale(1)}75%{opacity:1;transform:scale(1)}100%{opacity:0;transform:scale(1.05)}}
+    @keyframes stampShake{0%{opacity:0;transform:translateX(0) scale(1.6)}15%{opacity:1;transform:translateX(0) scale(1)}25%{transform:translateX(-10px)}35%{transform:translateX(10px)}45%{transform:translateX(-7px)}55%{transform:translateX(7px)}65%{transform:translateX(0)}80%{opacity:1}100%{opacity:0}}
+    .actions-sticky{position:sticky;bottom:10px;z-index:5;background:var(--card2);border:1.5px solid var(--soft-line);border-radius:16px;padding:10px;margin-top:12px;box-shadow:0 -6px 24px rgba(23,32,51,.10)}
+    .pomo-time{font-size:44px;font-weight:900;letter-spacing:3px;text-align:center;margin:6px 0;font-variant-numeric:tabular-nums}
+    .pomo-time.break{color:#16a34a}
+    .pomo-float{position:fixed;right:18px;bottom:18px;z-index:60;background:var(--card);border:2px solid var(--main);border-radius:999px;padding:10px 18px;font-weight:800;font-size:17px;box-shadow:0 12px 34px rgba(0,0,0,.25);cursor:pointer;font-variant-numeric:tabular-nums}
+    .pomo-float.break{border-color:#22c55e}
+    .modal-backdrop{position:fixed;inset:0;background:rgba(15,23,42,.55);display:none;align-items:center;justify-content:center;padding:20px;z-index:50}
+    .modal-backdrop.show{display:flex}
+    .modal{max-width:780px;width:100%;max-height:88vh;overflow:auto;background:var(--card);border-radius:24px;padding:22px;box-shadow:0 28px 80px rgba(0,0,0,.3)}
+    .provider-box{border:1.5px solid var(--soft-line);border-radius:16px;padding:14px;margin-top:12px;background:var(--card2)}
+    a{color:var(--main)}
+    button,.btn,input[type="radio"]+span{touch-action:manipulation;-webkit-tap-highlight-color:transparent}
+    @supports(padding:max(0px)){
+      body{padding-left:env(safe-area-inset-left);padding-right:env(safe-area-inset-right)}
+      .topbar{padding-top:max(10px,env(safe-area-inset-top))}
+      .pomo-float{bottom:calc(18px + env(safe-area-inset-bottom));right:calc(18px + env(safe-area-inset-right))}
+    }
+  </style>
+</head>
+<body>
+  <div class="app">
+    <header class="topbar">
+      <div class="brand"><div class="logo">AI</div><div><h1>勉強AIボットくん</h1><div class="subtitle">小4〜中3対応・5教科・Gemini AI・間隔反復復習・XPレベル</div></div></div>
+      <div class="top-actions">
+        <button class="btn" id="btnUser">👤 ユーザー</button>
+        <span id="aiBadge" class="ai-badge off">AI未設定</span>
+        <button class="btn icon" id="btnTheme" title="ダーク/ライト切替">🌙</button>
+        <button class="btn icon" id="btnFont" title="文字サイズ切替">Aa</button>
+        <button class="btn icon" id="btnSfx" title="効果音 ON/OFF">🔔</button>
+        <button class="btn icon" id="btnBgm" title="BGM ON/OFF">🎵</button>
+        <button class="btn" id="btnHome">🏠 ホーム</button>
+        <button class="btn" id="btnSettings">⚙️ AI設定</button>
+        <button class="btn danger" id="btnReset">初期化</button>
+      </div>
+    </header>
+    <main class="grid">
+      <section class="card" id="mainPanel"></section>
+      <aside class="stack">
+        <section class="card" id="timerPanel"></section>
+        <section class="card" id="resumePanel"></section>
+        <section class="card" id="statsPanel"></section>
+        <section class="card" id="calendarPanel"></section>
+        <section class="card" id="mistakesPanel"></section>
+        <section class="card" id="historyPanel"></section>
+      </aside>
+    </main>
+    <div class="footer-note">※学習記録はブラウザのlocalStorageに自動保存します。公開アプリにする場合、APIキーはサーバー側で管理してください。</div>
+  </div>
+
+  <div class="modal-backdrop" id="settingsModal"><div class="modal">
+    <div class="space"><h2 style="margin:0">⚙️ AI設定</h2><button class="btn" id="closeSettings">閉じる</button></div>
+    <p class="muted small">AIを設定すると、問題生成・正誤判定・解説・質問チャットがあなた専用に個別最適化されます。APIキーなしでも内蔵問題で動きます。</p>
+    <div class="setup-grid" style="margin-top:6px">
+      <div><label for="providerInput">AIプロバイダ</label><select id="providerInput"><option value="gemini">Google Gemini（無料枠あり・おすすめ）</option><option value="openai">OpenAI互換API</option></select></div>
+      <div><label for="aiEnabledInput">AI機能</label><select id="aiEnabledInput"><option value="true">ON：AIで問題・解説を作る</option><option value="false">OFF：内蔵問題だけ使う</option></select></div>
+      <div><label for="dailyGoalInput">1日の目標問題数</label><select id="dailyGoalInput"><option value="5">5問</option><option value="10">10問</option><option value="15">15問</option><option value="20">20問</option><option value="30">30問</option></select></div>
+    </div>
+    <div class="provider-box" id="geminiBox">
+      <strong>🔷 Gemini 設定</strong>
+      <p class="muted small" style="margin:6px 0 10px"><a href="https://aistudio.google.com/apikey" target="_blank" rel="noopener">Google AI Studio</a> でGoogleアカウントがあれば<strong>無料でAPIキーを発行</strong>できます（クレジットカード不要）。</p>
+      <div class="setup-grid">
+        <div><label for="geminiKeyInput">Gemini APIキー</label><input id="geminiKeyInput" type="password" placeholder="AIza..." autocomplete="off" /></div>
+        <div><label for="geminiModelInput">モデル名</label><input id="geminiModelInput" placeholder="gemini-flash-latest" /><div class="muted small" style="margin-top:4px">おすすめ：gemini-flash-latest（常に最新のFlash）</div></div>
+      </div>
+    </div>
+    <div class="provider-box" id="openaiBox">
+      <strong>🟢 OpenAI互換API 設定</strong>
+      <div class="setup-grid" style="margin-top:10px">
+        <div><label for="apiKeyInput">APIキー</label><input id="apiKeyInput" type="password" placeholder="sk-..." autocomplete="off" /></div>
+        <div><label for="modelInput">モデル名</label><input id="modelInput" placeholder="例：gpt-4.1-mini" /></div>
+        <div style="grid-column:1/-1"><label for="endpointInput">APIエンドポイント</label><input id="endpointInput" placeholder="https://api.openai.com/v1/chat/completions" /></div>
+      </div>
+    </div>
+    <div class="provider-box" id="voiceBox">
+      <strong>🔊 英語の発音（読み上げ音声）</strong>
+      <p class="muted small" style="margin:6px 0 10px">英語音声が「自動」でうまく選ばれない時は、ここで直接選んでテストできます。音声を新しくインストールした後は、<strong>ブラウザを一度すべて閉じて開き直す</strong>と一覧に出てきます。</p>
+      <div class="setup-grid">
+        <div><label for="voiceSelectInput">使う音声</label><select id="voiceSelectInput"><option value="">自動（英語音声を自動選択）</option></select></div>
+        <div style="display:flex;align-items:flex-end"><button class="btn" id="voiceTestBtn" style="width:100%">🔊 この音声でテスト再生</button></div>
+      </div>
+      <div id="voiceInfo" class="muted small" style="margin-top:8px"></div>
+    </div>
+    <div class="row" style="margin-top:14px"><button class="btn primary" id="saveSettings">保存</button><button class="btn" id="testAI">AI接続テスト</button><button class="btn danger" id="clearApiKey">APIキー削除</button></div>
+    <div id="settingsMessage" class="message-list"></div>
+  </div></div>
+
+  <div class="modal-backdrop" id="userModal"><div class="modal">
+    <div class="space"><h2 style="margin:0">👤 ユーザー</h2><button class="btn" id="closeUser">閉じる</button></div>
+    <p class="muted small">きょうだいや友達それぞれでユーザーを作れます。学習記録・レベル・実績・AI設定はユーザーごとに別々に保存されます。</p>
+    <div id="userList" class="message-list" style="margin-top:4px"></div>
+    <div class="provider-box">
+      <strong>➕ 新しいユーザーを追加</strong>
+      <div class="setup-grid" style="margin-top:10px">
+        <div><label for="newUserName">名前（ニックネームOK）</label><input id="newUserName" placeholder="例：たけし" maxlength="20" /></div>
+        <div><label for="newUserGrade">学年</label><select id="newUserGrade"></select></div>
+      </div>
+      <div class="row" style="margin-top:12px"><button class="btn primary" id="addUserBtn">このユーザーを追加して切り替え</button></div>
+    </div>
+  </div></div>
+
+  <script>
+  (() => {
+    "use strict";
+
+    const REGISTRY_KEY = "study_ai_bot_registry_v4";
+    const USER_KEY_PREFIX = "study_ai_bot_v4_user_";
+    const V3_STORAGE_KEY = "chuu1_study_ai_bot_v3";
+    const OLD_STORAGE_KEY = "chuu1_study_ai_bot_unique_v2";
+    const GRADES = ["小学4年生","小学5年生","小学6年生","中学1年生","中学2年生","中学3年生"];
+    const COURSE_LABELS = {single:"シングルコース",homework:"宿題サポートコース",test:"テスト勉強コース",mistakes:"間違えた問題が出てくるコース",quiz:"クイズモード"};
+    const SUBJECTS = ["国語","数学","英語","理科","社会"];
+    const DIFFICULTIES = ["やさしめ","ふつう","少しむずかしめ"];
+    const SRS_INTERVALS = [1,3,7,14,30]; // 間隔反復（日数）：正解するたび次へ、間違えたら最初へ
+
+    const DEFAULT_STATE = {
+      profile:{name:"",grade:"中学1年生"},
+      settings:{
+        provider:"gemini",
+        geminiApiKey:"",geminiModel:"gemini-flash-latest",
+        apiKey:"",endpoint:"https://api.openai.com/v1/chat/completions",model:"gpt-4.1-mini",
+        aiEnabled:true,dailyGoal:10,theme:"light",fontScale:"normal",voiceURI:"",sfxOn:true,bgmOn:true,pomoWork:25,pomoBreak:5
+      },
+      app:{screen:"home",selectedCourse:null,draftSetup:{},session:null,lastSavedAt:null},
+      records:{history:[],mistakes:[],totalAnswered:0,totalCorrect:0,totalHints:0,seenQuestions:{},mastery:{},daily:{},streakCurrent:0,streakBest:0,lastStudyDate:null,xp:0,badges:{},graduatedCount:0,hadPerfect:false,studySeconds:0,dailyTime:{},pomoCount:0}
+    };
+
+    const SYSTEM_PROMPT = `あなたは「勉強AIボットくん」です。小学4年生〜中学3年生の勉強をサポートします。
+先生っぽくわかりやすく、少し親しみやすく教えてください。
+アプリにはXP・レベル・称号・実績バッジなどのゲーム要素がありますが、あなたの返答は勉強の中身（問題・判定・解説・励まし）に集中してください。
+
+重要ルール：
+- 入力データに grade（学年）がある場合、問題の内容・難易度・漢字・語彙をその学年に完全に合わせる。学習指導要領でその学年がまだ習っていない内容は出さない。
+- 小学生には漢字にふりがな的な配慮（やさしい言い回し）をする。
+- 問題を出したら、まず生徒に考えてもらう。
+- 生徒が答えたら、正解・不正解を判定する。
+- わからない場合は、1回目は普通のヒント、2回目はかなりわかりやすいヒント。
+- それでも無理なら、答え・解説・覚え方を出す。
+- 余裕で正解していそうなら、長い解説は不要。
+- 暗記では、語呂合わせ・イメージ・例文・声に出す方法などを出す。
+- 宿題では答え丸写しになりすぎないよう、まず考え方から出す。
+- シングルコースでは、過去に出した問題と同じ問題を絶対に出さない。
+- 苦手分析データ（weakAreas・mastery・recentMistakes）がある場合は、その生徒専用に苦手へ寄せた問題・解説を作る。
+- 質問チャット（tutor_chat）では、生徒がまだ回答していない問題の答えを直接教えず、考え方に導く。
+- 返答はJSONだけ。JSONの外に文章を書かない。`;
+
+    let registry = loadRegistry();
+    let state = registry.activeUserId ? loadUserState(registry.activeUserId) : clone(DEFAULT_STATE);
+    let currentImageDataUrl = null;
+    let tutorOpen = false;
+    const $ = id => document.getElementById(id);
+    const mainPanel = $("mainPanel"), timerPanel = $("timerPanel"), resumePanel = $("resumePanel"), statsPanel = $("statsPanel"), calendarPanel = $("calendarPanel"), mistakesPanel = $("mistakesPanel"), historyPanel = $("historyPanel");
+
+    function clone(x){return JSON.parse(JSON.stringify(x));}
+    function escapeHtml(s){return String(s ?? "").replace(/[&<>'"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;","'":"&#39;",'"':"&quot;"}[c]));}
+    function uid(p="id"){return `${p}_${Date.now()}_${Math.random().toString(16).slice(2)}`;}
+    function norm(s){return String(s ?? "").trim().replace(/\s+/g," ").replace(/[Ａ-Ｚａ-ｚ０-９]/g,ch=>String.fromCharCode(ch.charCodeAt(0)-0xFEE0)).toLowerCase();}
+    function short(s,n=70){s=String(s ?? "").replace(/\s+/g," ");return s.length>n?s.slice(0,n)+"...":s;}
+    function dateText(iso){try{return new Date(iso).toLocaleString("ja-JP",{month:"2-digit",day:"2-digit",hour:"2-digit",minute:"2-digit"});}catch{return "";}}
+    function dayKey(d=new Date()){const y=d.getFullYear(),m=String(d.getMonth()+1).padStart(2,"0"),dd=String(d.getDate()).padStart(2,"0");return `${y}-${m}-${dd}`;}
+    function addDays(d,n){const x=new Date(d);x.setDate(x.getDate()+n);return x;}
+    function isDontKnow(s){const t=norm(s);return ["わからない","分からない","わかんない","わからん","むり","無理","知らない","ヒント","hint","?"].some(w=>t.includes(w));}
+    function shuffle(arr){const a=[...arr];for(let i=a.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[a[i],a[j]]=[a[j],a[i]];}return a;}
+    function pick(arr){return arr[Math.floor(Math.random()*arr.length)];}
+    function rand(min,max){return Math.floor(Math.random()*(max-min+1))+min;}
+    // ===== 英語読み上げ：ネイティブ英語音声を優先選択 =====
+    let enVoice=null,voiceWarned=false;
+    function pickEnVoice(){
+      try{
+        const vs=speechSynthesis.getVoices();if(!vs.length)return null;
+        const prefs=[
+          v=>/en[-_]US/i.test(v.lang)&&/natural/i.test(v.name),                      // Microsoft ○○ Online (Natural) 系：最も自然
+          v=>/en[-_]US/i.test(v.lang)&&/google/i.test(v.name),                       // Google US English（Chrome）
+          v=>/en[-_]US/i.test(v.lang)&&/(aria|jenny|ana|guy|emma|andrew|ava|michelle|zira|david|mark)/i.test(v.name),
+          v=>/en[-_]US/i.test(v.lang),
+          v=>/en[-_]GB/i.test(v.lang)&&/(natural|google)/i.test(v.name),
+          v=>/^en/i.test(v.lang)
+        ];
+        for(const f of prefs){const v=vs.find(f);if(v)return v;}
+        return null;
+      }catch{return null;}
+    }
+    function refreshEnVoice(){enVoice=pickEnVoice();}
+    if("speechSynthesis" in window){refreshEnVoice();speechSynthesis.addEventListener?.("voiceschanged",refreshEnVoice);speechSynthesis.onvoiceschanged=refreshEnVoice;}
+    function selectedVoice(){
+      try{
+        const uri=state.settings.voiceURI;
+        if(uri){const v=speechSynthesis.getVoices().find(v=>v.voiceURI===uri||v.name===uri);if(v)return v;}
+      }catch{}
+      if(!enVoice)refreshEnVoice();
+      return enVoice;
+    }
+    function speak(text){
+      try{
+        if(!("speechSynthesis" in window))return;
+        speechSynthesis.cancel();
+        const v=selectedVoice();
+        const u=new SpeechSynthesisUtterance(text);
+        if(v){u.voice=v;u.lang=v.lang;}else{u.lang="en-US";}
+        u.rate=0.95;u.pitch=1;
+        speechSynthesis.speak(u);
+        if(!v&&!voiceWarned){voiceWarned=true;if(state.app.session?.currentQuestion)addSessionMessage("この端末に英語の音声が見つからないため、発音が不自然になることがあります。Windowsの「設定 > 時刻と言語 > 音声認識 > 音声を追加」から English (United States) を追加し、ブラウザをすべて閉じて開き直してください。⚙️AI設定の「英語の発音」欄で確認できます。","warn");}
+      }catch{}
+    }
+
+    function mergeDefaults(base,saved){for(const k of Object.keys(saved||{})){if(saved[k]&&typeof saved[k]==="object"&&!Array.isArray(saved[k])) base[k]=mergeDefaults(base[k]||{},saved[k]); else base[k]=saved[k];}return base;}
+
+    // ===== マルチユーザー：レジストリ＋ユーザー別ストレージ =====
+    function loadRegistry(){
+      try{const r=JSON.parse(localStorage.getItem(REGISTRY_KEY));if(r&&Array.isArray(r.users))return r;}catch{}
+      // 旧v3/v2の単一ユーザーデータがあれば「わたし」として自動移行
+      const reg={users:[],activeUserId:null};
+      try{
+        if(localStorage.getItem(V3_STORAGE_KEY)||localStorage.getItem(OLD_STORAGE_KEY)){
+          const id=uid("user");
+          reg.users.push({id,name:"わたし",grade:"中学1年生",createdAt:new Date().toISOString()});
+          reg.activeUserId=id;
+          const st=legacyLoadState();
+          st.profile={name:"わたし",grade:"中学1年生"};
+          localStorage.setItem(USER_KEY_PREFIX+id,JSON.stringify(st));
+          localStorage.setItem(REGISTRY_KEY,JSON.stringify(reg));
+        }
+      }catch{}
+      return reg;
+    }
+    function saveRegistry(){localStorage.setItem(REGISTRY_KEY,JSON.stringify(registry));}
+    function userKey(id){return USER_KEY_PREFIX+id;}
+    function loadUserState(id){
+      try{const raw=localStorage.getItem(userKey(id));if(raw)return mergeDefaults(clone(DEFAULT_STATE),JSON.parse(raw));}catch{}
+      return clone(DEFAULT_STATE);
+    }
+    function legacyLoadState(){
+      try{
+        const raw=localStorage.getItem(V3_STORAGE_KEY);
+        if(raw) return mergeDefaults(clone(DEFAULT_STATE),JSON.parse(raw));
+        const old=localStorage.getItem(OLD_STORAGE_KEY);
+        if(old){
+          const o=JSON.parse(old);const st=clone(DEFAULT_STATE);
+          if(o.records) st.records=mergeDefaults(st.records,o.records);
+          if(o.app) st.app=mergeDefaults(st.app,o.app);
+          if(o.settings){st.settings.apiKey=o.settings.apiKey||"";st.settings.endpoint=o.settings.endpoint||st.settings.endpoint;st.settings.model=o.settings.model||st.settings.model;st.settings.aiEnabled=o.settings.aiEnabled!==false;if(o.settings.apiKey)st.settings.provider="openai";}
+          (st.records.mistakes||[]).forEach(m=>{m.srs=m.srs||{step:0,dueAt:m.at||new Date().toISOString()};});
+          return st;
+        }
+      }catch{}
+      return clone(DEFAULT_STATE);
+    }
+    function saveState(){if(!registry.activeUserId)return;state.app.lastSavedAt=new Date().toISOString();localStorage.setItem(userKey(registry.activeUserId),JSON.stringify(state));renderSidePanels();updateAIBadge();updateUserButton();}
+    function switchUser(id){
+      if(!registry.users.some(u=>u.id===id))return;
+      registry.activeUserId=id;saveRegistry();
+      state=loadUserState(id);currentImageDataUrl=null;tutorOpen=false;pomoHardReset();
+      applyDisplayPrefs();closeUserModal();renderAll();
+      showToast(`<div class="lv-big">👤 ${escapeHtml(state.profile?.name||"")}さんに切り替え</div><div>${escapeHtml(state.profile?.grade||"")}</div>`);
+    }
+    function createUser(name,grade){
+      const id=uid("user");
+      registry.users.push({id,name,grade,createdAt:new Date().toISOString()});
+      registry.activeUserId=id;saveRegistry();
+      state=clone(DEFAULT_STATE);state.profile={name,grade};
+      localStorage.setItem(userKey(id),JSON.stringify(state));
+      currentImageDataUrl=null;tutorOpen=false;pomoHardReset();
+      applyDisplayPrefs();closeUserModal();renderAll();
+      showToast(`<div class="lv-big">🎉 ようこそ、${escapeHtml(name)}さん！</div><div>${escapeHtml(grade)}の問題で始めよう</div>`);
+    }
+    function deleteUser(id){
+      const u=registry.users.find(x=>x.id===id);if(!u)return;
+      if(!confirm(`「${u.name}」さんのデータ（学習記録・レベル・実績）をすべて削除しますか？`))return;
+      localStorage.removeItem(userKey(id));
+      registry.users=registry.users.filter(x=>x.id!==id);
+      if(registry.activeUserId===id)registry.activeUserId=registry.users[0]?.id||null;
+      saveRegistry();
+      state=registry.activeUserId?loadUserState(registry.activeUserId):clone(DEFAULT_STATE);
+      applyDisplayPrefs();renderUserList();renderAll();
+    }
+    function resetAll(){if(!registry.activeUserId){return;}if(confirm(`現在のユーザー「${state.profile?.name||""}」の学習記録・間違いリスト・設定をすべて削除しますか？（ユーザー自体は残ります）`)){const p=clone(state.profile);state=clone(DEFAULT_STATE);state.profile=p;currentImageDataUrl=null;saveState();applyDisplayPrefs();renderAll();}}
+    function currentGrade(){return state.profile?.grade||"中学1年生";}
+    function isElementary(){return currentGrade().startsWith("小");}
+
+    function applyDisplayPrefs(){document.documentElement.dataset.theme=state.settings.theme||"light";document.documentElement.dataset.font=state.settings.fontScale||"normal";$("btnTheme").textContent=state.settings.theme==="dark"?"☀️":"🌙";$("btnSfx").textContent=state.settings.sfxOn!==false?"🔔":"🔕";$("btnSfx").classList.toggle("off",state.settings.sfxOn===false);$("btnBgm").classList.toggle("off",state.settings.bgmOn===false);}
+    function toggleTheme(){state.settings.theme=state.settings.theme==="dark"?"light":"dark";saveState();applyDisplayPrefs();}
+    function toggleFont(){state.settings.fontScale=state.settings.fontScale==="large"?"normal":"large";saveState();applyDisplayPrefs();}
+    function toggleSfx(){state.settings.sfxOn=state.settings.sfxOn===false;saveState();applyDisplayPrefs();if(state.settings.sfxOn)sfxCorrect();}
+    function toggleBgm(){state.settings.bgmOn=state.settings.bgmOn===false;saveState();applyDisplayPrefs();if(!state.settings.bgmOn)stopBgm();else if(state.app.screen==="study")startBgm();}
+
+    // ===== サウンド（Web Audioで合成：外部ファイル不要） =====
+    let audioCtxRef=null,bgmTimer=null;
+    function actx(){if(!audioCtxRef)audioCtxRef=new (window.AudioContext||window.webkitAudioContext)();if(audioCtxRef.state==="suspended")audioCtxRef.resume();return audioCtxRef;}
+    function tone(freq,delay,dur,type="sine",gain=0.14){try{const c=actx();const o=c.createOscillator(),g=c.createGain();o.type=type;o.frequency.value=freq;const t=c.currentTime+delay;g.gain.setValueAtTime(0.0001,t);g.gain.linearRampToValueAtTime(gain,t+0.02);g.gain.exponentialRampToValueAtTime(0.0001,t+dur);o.connect(g);g.connect(c.destination);o.start(t);o.stop(t+dur+0.05);}catch{}}
+    function sfxOnQ(){return state.settings.sfxOn!==false;}
+    function sfxCorrect(){if(!sfxOnQ())return;tone(880,0,0.16,"sine",0.16);tone(1318.5,0.13,0.35,"sine",0.16);}
+    function sfxWrong(){if(!sfxOnQ())return;tone(196,0,0.22,"square",0.07);tone(175,0.24,0.4,"square",0.07);}
+    function sfxLevelUp(){if(!sfxOnQ())return;[523.25,659.25,783.99,1046.5].forEach((f,i)=>tone(f,i*0.13,0.3,"triangle",0.13));}
+    function sfxBadge(){if(!sfxOnQ())return;tone(659.25,0,0.12,"triangle",0.13);tone(987.77,0.11,0.3,"triangle",0.13);}
+    // オルゴール風BGM（ペンタトニックの静かなループ）
+    const BGM_NOTES=[523.25,587.33,659.25,783.99,880,783.99,659.25,587.33,523.25,659.25,783.99,880,1046.5,880,783.99,659.25];
+    let bgmIdx=0;
+    function startBgm(){if(state.settings.bgmOn===false||bgmTimer)return;try{actx();}catch{return;}bgmTimer=setInterval(()=>{if(document.hidden)return;tone(BGM_NOTES[bgmIdx%BGM_NOTES.length],0,0.9,"sine",0.03);if(bgmIdx%4===0)tone(BGM_NOTES[bgmIdx%BGM_NOTES.length]/2,0,1.2,"sine",0.02);bgmIdx++;},450);}
+    function stopBgm(){if(bgmTimer){clearInterval(bgmTimer);bgmTimer=null;}}
+
+    // ===== ポモドーロタイマー＆勉強時間トラッキング =====
+    function fmtClock(sec){sec=Math.max(0,sec);const m=Math.floor(sec/60),s=sec%60;return `${String(m).padStart(2,"0")}:${String(s).padStart(2,"0")}`;}
+    function fmtDuration(sec){sec=Math.max(0,Math.floor(sec||0));const h=Math.floor(sec/3600),m=Math.floor(sec%3600/60);if(h>=1)return `${h}時間${m}分`;if(m>=1)return `${m}分`;return "1分未満";}
+    const TIME_COMPARISONS=[
+      {sec:180,label:"カップラーメンを作る時間",one:"カップラーメン1個分"},
+      {sec:3000,label:"学校の授業",one:"授業1コマ分"},
+      {sec:7200,label:"映画",one:"映画1本分"},
+      {sec:9000,label:"新幹線で東京→大阪",one:"新幹線 東京→大阪 1回分"},
+      {sec:18000,label:"フルマラソン完走（市民ランナー）",one:"フルマラソン1回分"},
+      {sec:36000,label:"富士山の登山（往復）",one:"富士山登山1回分"},
+      {sec:86400,label:"まる1日（24時間）",one:"まる1日分"},
+      {sec:396000,label:"江戸時代の旅人が東海道（江戸→京都）を歩く",one:"東海道の旅1回分"},
+    ];
+    function comparisonsHtml(t){
+      if(t<180)return `<div class="muted small" style="margin-top:8px">勉強すると、累計時間が「実生活の何に相当するか」でここに出てくるよ。</div>`;
+      const done=TIME_COMPARISONS.filter(c=>t>=c.sec);
+      const lines=done.slice(-3).reverse().map(c=>{const n=t/c.sec;const disp=n>=10?Math.floor(n):Math.floor(n*10)/10;return `🏆 ${c.label} <strong>${disp}${c.label==="学校の授業"?"コマ":c.label==="映画"?"本":"回"}分</strong>`;});
+      const next=TIME_COMPARISONS.find(c=>t<c.sec);
+      const nextLine=next?`<div style="margin-top:6px">🎯 あと <strong>${fmtDuration(next.sec-t)}</strong> で「${next.one}」！</div>`:"";
+      const proPct=Math.min(100,t/36000000*100);
+      return `<div class="message bot" style="margin-top:8px">${lines.join("<br>")}${nextLine}<div class="small muted" style="margin-top:8px">🧙 プロの「1万時間」への道：${proPct<1?proPct.toFixed(2):proPct.toFixed(1)}%</div><div class="goal-bar"><div style="width:${Math.max(proPct,0.5)}%"></div></div></div>`;
+    }
+    let pomo={mode:"work",remainingSec:25*60,running:false,endsAt:null};
+    let pomoInterval=null;
+    function workSec(){return (state.settings.pomoWork||25)*60;}
+    function breakSec(){return (state.settings.pomoBreak||5)*60;}
+    function pomoRemaining(){return pomo.running&&pomo.endsAt?Math.max(0,Math.round((pomo.endsAt-Date.now())/1000)):pomo.remainingSec;}
+    function ensurePomoInterval(){if(!pomoInterval)pomoInterval=setInterval(pomoTickFn,1000);}
+    function startPomo(){if(pomo.running)return;pomo.endsAt=Date.now()+pomo.remainingSec*1000;pomo.running=true;ensurePomoInterval();renderTimerPanel();updatePomoFloat();}
+    function pausePomo(){if(!pomo.running)return;pomo.remainingSec=pomoRemaining();pomo.running=false;pomo.endsAt=null;renderTimerPanel();updatePomoFloat();}
+    function togglePomo(){pomo.running?pausePomo():startPomo();}
+    function pomoHardReset(){pomo.mode="work";pomo.running=false;pomo.endsAt=null;pomo.remainingSec=workSec();updatePomoFloat();}
+    function pomoTickFn(){if(!pomo.running)return;const r=pomoRemaining();const el=$("pomoTime");if(el)el.textContent=fmtClock(r);updatePomoFloat();if(r<=0)finishPomoPhase(false);}
+    function finishPomoPhase(skipped){
+      if(pomo.mode==="work"){
+        if(!skipped){state.records.pomoCount=(state.records.pomoCount||0)+1;sfxLevelUp();showToast(`<div class="lv-big">🍅 ポモドーロ完了！</div><div>☕ ${state.settings.pomoBreak||5}分休憩しよう</div>`,"levelup");checkBadges();saveState();}
+        pomo.mode="break";pomo.remainingSec=breakSec();
+        pomo.running=!skipped;pomo.endsAt=pomo.running?Date.now()+pomo.remainingSec*1000:null;
+      }else{
+        if(!skipped){sfxBadge();showToast(`<div class="lv-big">☕ 休憩おわり！</div><div>次の🍅を始めよう</div>`,"badge");}
+        pomo.mode="work";pomo.remainingSec=workSec();pomo.running=false;pomo.endsAt=null;
+      }
+      renderTimerPanel();updatePomoFloat();
+    }
+    function updatePomoFloat(){
+      let f=document.getElementById("pomoFloat");
+      if(!pomo.running){if(f)f.remove();return;}
+      if(!f){f=document.createElement("div");f.id="pomoFloat";f.className="pomo-float";f.title="クリックで一時停止/再開";f.addEventListener("click",togglePomo);document.body.appendChild(f);}
+      f.classList.toggle("break",pomo.mode==="break");
+      f.textContent=`${pomo.mode==="work"?"🍅":"☕"} ${fmtClock(pomoRemaining())}`;
+    }
+    function renderTimerPanel(){
+      if(!timerPanel)return;
+      const total=state.records.studySeconds||0,today=(state.records.dailyTime||{})[dayKey()]||0;
+      const preset=`${state.settings.pomoWork||25}-${state.settings.pomoBreak||5}`;
+      timerPanel.innerHTML=`<h2 class="panel-title">🍅 ポモドーロタイマー</h2>
+        <div class="small" style="text-align:center;font-weight:700">${pomo.mode==="work"?"🍅 集中タイム":"☕ 休憩タイム"}　<span class="muted">完了 🍅×${state.records.pomoCount||0}</span></div>
+        <div class="pomo-time ${pomo.mode==="break"?"break":""}" id="pomoTime">${fmtClock(pomoRemaining())}</div>
+        <div class="row" style="justify-content:center"><button class="btn primary" id="pomoStartBtn">${pomo.running?"⏸ 一時停止":"▶ スタート"}</button><button class="btn" id="pomoSkipBtn">⏭ スキップ</button><button class="btn" id="pomoResetBtn">リセット</button></div>
+        <div class="row" style="justify-content:center;margin-top:8px"><select id="pomoPreset" style="width:auto;padding:8px 10px">
+          <option value="25-5"${preset==="25-5"?" selected":""}>25分集中＋5分休憩</option>
+          <option value="50-10"${preset==="50-10"?" selected":""}>50分集中＋10分休憩</option>
+          <option value="15-3"${preset==="15-3"?" selected":""}>15分集中＋3分休憩</option>
+        </select></div>
+        <div style="margin-top:14px"><div class="small" style="font-weight:700">⏱️ 勉強時間</div>
+        <div class="stat-grid"><div class="stat"><div class="num">${fmtDuration(today)}</div><div class="label">今日</div></div><div class="stat"><div class="num">${fmtDuration(total)}</div><div class="label">累計</div></div></div>
+        ${comparisonsHtml(total)}</div>`;
+      $("pomoStartBtn").addEventListener("click",togglePomo);
+      $("pomoSkipBtn").addEventListener("click",()=>finishPomoPhase(true));
+      $("pomoResetBtn").addEventListener("click",()=>{pomoHardReset();renderTimerPanel();});
+      $("pomoPreset").addEventListener("change",e=>{const [w,b]=e.target.value.split("-").map(Number);state.settings.pomoWork=w;state.settings.pomoBreak=b;if(!pomo.running&&pomo.mode==="work")pomo.remainingSec=workSec();saveState();});
+    }
+    // 勉強時間ハートビート（15秒ごと・タブ非表示や停止中はカウントしない）
+    let lastBeat=Date.now();
+    setInterval(()=>{
+      const now=Date.now();const delta=Math.min(Math.round((now-lastBeat)/1000),300);lastBeat=now;
+      if(!registry.activeUserId||delta<=0)return;
+      const studying=(state.app.screen==="study"&&!document.hidden)||(pomo.running&&pomo.mode==="work");
+      if(!studying)return;
+      state.records.studySeconds=(state.records.studySeconds||0)+delta;
+      state.records.dailyTime=state.records.dailyTime||{};
+      state.records.dailyTime[dayKey()]=(state.records.dailyTime[dayKey()]||0)+delta;
+      try{localStorage.setItem(userKey(registry.activeUserId),JSON.stringify(state));}catch{}
+      if(Math.floor((state.records.studySeconds)/60)!==Math.floor((state.records.studySeconds-delta)/60))renderTimerPanel();
+      checkBadges();
+    },15000);
+
+    // ===== 正誤スタンプ演出 =====
+    function showJudgeFx(correct){
+      const d=document.createElement("div");
+      d.className=`judge-fx ${correct?"correct":"wrong"}`;
+      d.innerHTML=`<div class="stamp">${correct?"⭕<br>正解！":"❌<br>ざんねん"}</div>`;
+      document.body.appendChild(d);
+      setTimeout(()=>d.remove(),950);
+    }
+    function scrollToFeedback(){requestAnimationFrame(()=>{const list=$("questionMessages");const el=(list&&list.lastElementChild)||null;if(el)el.scrollIntoView({behavior:"smooth",block:"center"});});}
+    function scrollToQuestionTop(){requestAnimationFrame(()=>{const box=document.querySelector(".question-box")||mainPanel;box.scrollIntoView({behavior:"smooth",block:"start"});});}
+
+    function providerLabel(){return state.settings.provider==="gemini"?`Gemini（${state.settings.geminiModel}）`:`${state.settings.model}`;}
+    function updateAIBadge(){const ok=canUseAI();const b=$("aiBadge");b.textContent=ok?`AI ON：${providerLabel()}`:"AI未設定 / 内蔵問題";b.className=`ai-badge ${ok?"on":"off"}`;}
+    function updateUserButton(){const u=registry.users.find(x=>x.id===registry.activeUserId);$("btnUser").textContent=u?`👤 ${u.name}（${u.grade.replace("学校","").replace("学年","")}）`:"👤 ユーザー登録";}
+    function renderAll(){updateUserButton();if(!registry.activeUserId){renderFirstUserSetup();renderSidePanels();updateAIBadge();return;}if(state.app.screen==="setup") renderSetup(state.app.selectedCourse); else if(state.app.screen==="study") renderStudy(); else if(state.app.screen==="result") renderResult(); else renderHome(); renderSidePanels(); updateAIBadge();}
+
+    // ===== 初回ユーザー登録画面 =====
+    function renderFirstUserSetup(){
+      mainPanel.innerHTML=`
+      <div class="hero"><h2>はじめまして！勉強AIボットくんです。</h2><div class="muted">まず、きみのことを教えてね。学年に合った問題を出すよ。</div></div>
+      <div class="setup-grid">
+        <div><label for="firstUserName">名前（ニックネームOK）</label><input id="firstUserName" placeholder="例：たけし" maxlength="20" /></div>
+        <div><label for="firstUserGrade">学年</label><select id="firstUserGrade">${GRADES.map(g=>`<option value="${g}">${g}</option>`).join("")}</select></div>
+      </div>
+      <div class="row" style="margin-top:16px"><button class="btn primary big" id="firstUserBtn">この内容ではじめる</button></div>
+      <div class="message bot" style="margin-top:14px">あとから「👤 ユーザー」ボタンで、きょうだいや友達のユーザーも追加できます。記録はそれぞれ別々に保存されます。</div>`;
+      $("firstUserBtn").addEventListener("click",()=>{
+        const name=$("firstUserName").value.trim()||"わたし";
+        const grade=$("firstUserGrade").value;
+        createUser(name,grade);
+      });
+    }
+
+    // ===== ユーザーモーダル =====
+    function openUserModal(){renderUserList();$("newUserName").value="";$("newUserGrade").innerHTML=GRADES.map(g=>`<option value="${g}">${g}</option>`).join("");$("userModal").classList.add("show");}
+    function closeUserModal(){$("userModal").classList.remove("show");}
+    function renderUserList(){
+      const w=$("userList");
+      if(!registry.users.length){w.innerHTML=`<div class="muted small">まだユーザーがいません。下から追加してください。</div>`;return;}
+      w.innerHTML=registry.users.map(u=>{
+        let lvTxt="";
+        try{const st=JSON.parse(localStorage.getItem(userKey(u.id))||"{}");const lv=levelFromXp(st.records?.xp||0);lvTxt=`Lv.${lv.level}　${st.records?.totalAnswered||0}問`;}catch{}
+        const active=u.id===registry.activeUserId;
+        return `<div class="list-item" style="display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap${active?";border-color:var(--main);background:var(--soft)":""}">
+          <div><strong>${active?"✅ ":""}${escapeHtml(u.name)}</strong><span class="muted">${escapeHtml(u.grade)}　${lvTxt}</span></div>
+          <div class="row">
+            <select data-grade-user="${u.id}" style="width:auto;padding:7px 9px">${GRADES.map(g=>`<option value="${g}"${g===u.grade?" selected":""}>${g}</option>`).join("")}</select>
+            ${active?"":`<button class="btn" data-switch-user="${u.id}">切り替え</button>`}
+            <button class="btn" data-rename-user="${u.id}">✏️</button>
+            <button class="btn danger" data-delete-user="${u.id}">削除</button>
+          </div></div>`;
+      }).join("");
+      w.querySelectorAll("[data-switch-user]").forEach(b=>b.addEventListener("click",()=>switchUser(b.dataset.switchUser)));
+      w.querySelectorAll("[data-delete-user]").forEach(b=>b.addEventListener("click",()=>deleteUser(b.dataset.deleteUser)));
+      w.querySelectorAll("[data-rename-user]").forEach(b=>b.addEventListener("click",()=>{
+        const u=registry.users.find(x=>x.id===b.dataset.renameUser);if(!u)return;
+        const name=prompt("新しい名前",u.name);if(!name||!name.trim())return;
+        u.name=name.trim();saveRegistry();
+        try{const st=JSON.parse(localStorage.getItem(userKey(u.id))||"{}");st.profile=st.profile||{};st.profile.name=u.name;localStorage.setItem(userKey(u.id),JSON.stringify(st));}catch{}
+        if(u.id===registry.activeUserId)state.profile.name=u.name;
+        renderUserList();renderAll();
+      }));
+      w.querySelectorAll("[data-grade-user]").forEach(sel=>sel.addEventListener("change",()=>{
+        const u=registry.users.find(x=>x.id===sel.dataset.gradeUser);if(!u)return;
+        u.grade=sel.value;saveRegistry();
+        try{const st=JSON.parse(localStorage.getItem(userKey(u.id))||"{}");st.profile=st.profile||{};st.profile.grade=u.grade;localStorage.setItem(userKey(u.id),JSON.stringify(st));}catch{}
+        if(u.id===registry.activeUserId)state.profile.grade=u.grade;
+        renderUserList();renderAll();
+      }));
+    }
+
+    // ===== SRS（間隔反復）ヘルパー =====
+    function dueMistakes(){const now=new Date();return state.records.mistakes.filter(m=>new Date(m.srs?.dueAt||0)<=now);}
+    function advanceSrs(mistakeId){
+      const m=state.records.mistakes.find(x=>x.id===mistakeId);if(!m)return null;
+      m.srs=m.srs||{step:0,dueAt:new Date().toISOString()};
+      if(m.srs.step>=SRS_INTERVALS.length-1){state.records.mistakes=state.records.mistakes.filter(x=>x.id!==mistakeId);state.records.graduatedCount=(state.records.graduatedCount||0)+1;return "graduated";}
+      m.srs.step++;m.srs.dueAt=addDays(new Date(),SRS_INTERVALS[m.srs.step]).toISOString();return "advanced";
+    }
+
+    // ===== ストリーク・デイリー記録 =====
+    function bumpDaily(){
+      const today=dayKey();
+      state.records.daily=state.records.daily||{};
+      state.records.daily[today]=(state.records.daily[today]||0)+1;
+      if(state.records.lastStudyDate!==today){
+        const yesterday=dayKey(addDays(new Date(),-1));
+        state.records.streakCurrent=(state.records.lastStudyDate===yesterday)?(state.records.streakCurrent||0)+1:1;
+        state.records.lastStudyDate=today;
+        state.records.streakBest=Math.max(state.records.streakBest||0,state.records.streakCurrent);
+      }
+      // 90日より前の記録は掃除
+      const keys=Object.keys(state.records.daily);if(keys.length>120){const cutoff=dayKey(addDays(new Date(),-90));keys.filter(k=>k<cutoff).forEach(k=>delete state.records.daily[k]);}
+    }
+    function effectiveStreak(){
+      const today=dayKey(),yesterday=dayKey(addDays(new Date(),-1));
+      if(state.records.lastStudyDate===today||state.records.lastStudyDate===yesterday) return state.records.streakCurrent||0;
+      return 0;
+    }
+
+    // ===== ゲーム要素：XP・レベル・称号・実績バッジ =====
+    function levelFromXp(xp){let lv=1,need=100,rem=Math.max(0,xp||0);while(rem>=need){rem-=need;lv++;need=100+(lv-1)*75;}return {level:lv,into:rem,need};}
+    function levelTitle(lv){return lv>=30?"👑 伝説の大賢者":lv>=25?"🧙 大賢者":lv>=20?"📜 賢者":lv>=15?"🛡️ 知識の騎士":lv>=10?"⚔️ 冒険者":lv>=5?"🌱 かけだし勇者":"✏️ 見習い勉強士";}
+    function showToast(html,cls=""){const d=document.createElement("div");d.className=`toast-pop ${cls}`;d.innerHTML=html;document.body.appendChild(d);requestAnimationFrame(()=>d.classList.add("show"));setTimeout(()=>{d.classList.remove("show");setTimeout(()=>d.remove(),450);},3400);}
+    function addXp(amount,s){
+      const before=levelFromXp(state.records.xp||0);
+      state.records.xp=(state.records.xp||0)+amount;
+      if(s)s.xpEarned=(s.xpEarned||0)+amount;
+      const after=levelFromXp(state.records.xp);
+      if(after.level>before.level){showToast(`<div class="lv-big">🎉 レベルアップ！</div><div>Lv.${after.level}　${levelTitle(after.level)}</div>`,"levelup");sfxLevelUp();}
+      return after;
+    }
+    function xpForCorrect(q,s){
+      let xp=10;
+      if(q.hintCount===0)xp+=5;
+      const d=String(q.difficulty||"");if(d.includes("むずかし"))xp+=5;else if(d==="ふつう")xp+=2;
+      if(q.isWeakMix)xp+=5;
+      if(q.fromMistakeId)xp+=5;
+      const combo=s?.combo||0;if(combo>=2)xp+=Math.min(combo,5);
+      return xp;
+    }
+    const BADGES=[
+      {id:"first_correct",icon:"🌟",name:"はじめての正解",desc:"最初の1問に正解した",cond:()=>state.records.totalCorrect>=1},
+      {id:"correct_50",icon:"💪",name:"50問マスター",desc:"合計50問に正解した",cond:()=>state.records.totalCorrect>=50},
+      {id:"correct_200",icon:"🏆",name:"200問チャンピオン",desc:"合計200問に正解した",cond:()=>state.records.totalCorrect>=200},
+      {id:"streak_3",icon:"🔥",name:"3日連続",desc:"3日連続で勉強した",cond:()=>effectiveStreak()>=3},
+      {id:"streak_7",icon:"🚀",name:"1週間連続",desc:"7日連続で勉強した",cond:()=>effectiveStreak()>=7},
+      {id:"streak_30",icon:"🌙",name:"1ヶ月連続",desc:"30日連続で勉強した",cond:()=>effectiveStreak()>=30},
+      {id:"graduate_1",icon:"🎓",name:"はじめての卒業",desc:"復習リストから1問卒業させた",cond:()=>(state.records.graduatedCount||0)>=1},
+      {id:"graduate_10",icon:"🎩",name:"卒業マスター",desc:"復習リストから10問卒業させた",cond:()=>(state.records.graduatedCount||0)>=10},
+      {id:"goal_day",icon:"🎯",name:"目標達成",desc:"1日の目標問題数をクリアした",cond:()=>(state.records.daily?.[dayKey()]||0)>=(state.settings.dailyGoal||10)},
+      {id:"all_subjects",icon:"🌈",name:"5教科制覇",desc:"5教科すべてで問題を解いた",cond:()=>new Set(Object.values(state.records.mastery||{}).map(m=>m.subject)).size>=5},
+      {id:"level_10",icon:"⚔️",name:"Lv.10 冒険者",desc:"レベル10に到達した",cond:()=>levelFromXp(state.records.xp||0).level>=10},
+      {id:"perfect",icon:"💯",name:"パーフェクト",desc:"5問以上のセッションを全問正解した",cond:()=>!!state.records.hadPerfect},
+      {id:"pomo_1",icon:"🍅",name:"はじめてのポモドーロ",desc:"ポモドーロを1回完走した",cond:()=>(state.records.pomoCount||0)>=1},
+      {id:"pomo_20",icon:"🥫",name:"トマト農家",desc:"ポモドーロを20回完走した",cond:()=>(state.records.pomoCount||0)>=20},
+      {id:"time_10h",icon:"⏱️",name:"累計10時間",desc:"勉強時間の累計が10時間をこえた",cond:()=>(state.records.studySeconds||0)>=36000},
+      {id:"time_50h",icon:"🗻",name:"累計50時間",desc:"勉強時間の累計が50時間をこえた（富士山登山5回分！）",cond:()=>(state.records.studySeconds||0)>=180000},
+    ];
+    function checkBadges(){
+      state.records.badges=state.records.badges||{};
+      BADGES.forEach(b=>{try{if(!state.records.badges[b.id]&&b.cond()){state.records.badges[b.id]=new Date().toISOString();showToast(`<div class="lv-big">${b.icon} 実績かくとく！</div><div>${escapeHtml(b.name)}</div>`,"badge");sfxBadge();}}catch{}});
+    }
+
+    function renderHome(){state.app.screen="home";saveState();stopBgm();const last=state.app.session;
+      const today=state.records.daily?.[dayKey()]||0,goal=state.settings.dailyGoal||10,due=dueMistakes().length,streak=effectiveStreak();
+      const goalPct=Math.min(100,Math.round(today/goal*100));
+      const lv=levelFromXp(state.records.xp||0),lvPct=Math.round(lv.into/lv.need*100);
+      mainPanel.innerHTML=`
+      <div class="hero"><h2>こんにちは、${escapeHtml(state.profile?.name||"")}さん！</h2><div class="muted">${escapeHtml(currentGrade())}に合わせた問題を出すよ。今日はどのコースで勉強する？</div><div class="chips"><span class="chip">🤖 Gemini AI対応</span><span class="chip">🧠 苦手に個別最適化</span><span class="chip">📆 間隔反復で復習</span><span class="chip">⚡ XP・レベル・実績</span><span class="chip">💾 自動セーブ</span></div></div>
+      <div class="dash">
+        <div class="dash-item"><span class="label">${levelTitle(lv.level)}</span><span class="big-num">Lv.${lv.level}</span><div class="xp-bar"><div style="width:${lvPct}%"></div></div><span class="small muted">あと ${lv.need-lv.into}XP でLv.${lv.level+1}</span></div>
+        <div class="dash-item"><span class="label">🔥 連続学習</span><span class="big-num">${streak}<span style="font-size:14px;font-weight:600"> 日</span></span><span class="small muted">最高記録 ${state.records.streakBest||0}日</span></div>
+        <div class="dash-item"><span class="label">🎯 今日の目標</span><span class="big-num">${today}<span style="font-size:14px;font-weight:600"> / ${goal}問</span></span><div class="goal-bar"><div style="width:${goalPct}%"></div></div>${today>=goal?`<span class="small" style="color:var(--good);font-weight:700">🎉 目標達成！</span>`:""}</div>
+        <div class="dash-item"><span class="label">📆 今日の復習</span><span class="big-num">${due}<span style="font-size:14px;font-weight:600"> 問</span></span>${due?`<button class="btn good" id="dueReviewBtn" style="margin-top:4px">今すぐ復習する</button>`:`<span class="small muted">復習期限の問題はなし</span>`}</div>
+      </div>
+      ${last&&!last.finishedAt?`<div class="message bot">前回の続きがあります。\nコース：${escapeHtml(COURSE_LABELS[last.course])} / 教科：${escapeHtml(last.subject)} / 範囲：${escapeHtml(last.unit)}</div><div class="row" style="margin:12px 0 16px"><button class="btn primary" id="continueBtn">▶ 前回の続きから</button></div>`:""}
+      <div class="course-grid">
+        ${courseCard("single","✏️ ① シングルコース","1問ずつ練習。毎回違う問題で、苦手も自然に混ぜます。")}
+        ${courseCard("homework","📓 ② 宿題サポートコース","宿題の文章入力・写真アップロードに対応。まず考え方から。")}
+        ${courseCard("test","📝 ③ テスト勉強コース","テスト範囲を入れて、重要ポイントと問題で確認。")}
+        ${courseCard("mistakes","🔁 ④ 間違い復習コース","忘却曲線に合わせて、復習すべき問題から順に出ます。")}
+        ${courseCard("quiz","⚡ ⑤ クイズモード","範囲・難易度・問題数を決めてテンポよくクイズ。")}
+      </div>`;
+      document.querySelectorAll("[data-course]").forEach(b=>b.addEventListener("click",()=>startSetup(b.dataset.course)));
+      if($("continueBtn")) $("continueBtn").addEventListener("click",()=>{state.app.screen="study";saveState();renderStudy();});
+      if($("dueReviewBtn")) $("dueReviewBtn").addEventListener("click",()=>startSetup("mistakes"));
+    }
+    function courseCard(id,title,desc){return `<button class="course-card" data-course="${id}"><strong>${escapeHtml(title)}</strong><span>${escapeHtml(desc)}</span></button>`;}
+    function startSetup(course){state.app.screen="setup";state.app.selectedCourse=course;state.app.draftSetup={course};saveState();renderSetup(course);}
+
+    function renderSetup(course){state.app.screen="setup";state.app.selectedCourse=course;const isHomework=course==="homework",isMistakes=course==="mistakes",isQuiz=course==="quiz";mainPanel.innerHTML=`
+      <div class="space"><div><h2 class="panel-title">${escapeHtml(COURSE_LABELS[course])}</h2><div class="muted small">始める前に設定しよう。</div></div><button class="btn" id="backHomeSetup">ホームへ戻る</button></div>
+      <div class="setup-grid" style="margin-top:14px">
+        ${!isHomework?`<div><label for="subjectInput">教科</label><select id="subjectInput">${SUBJECTS.map(s=>`<option value="${s}">${s==="数学"&&isElementary()?"算数":s}</option>`).join("")}</select></div>`:""}
+        ${(!isHomework&&!isMistakes)?`<div><label for="unitInput">範囲・単元</label><input id="unitInput" placeholder="例：英単語、正負の数、植物、世界の地理" /></div>`:""}
+        ${(!isHomework&&!isMistakes)?`<div><label for="difficultyInput">難しさ</label><select id="difficultyInput">${DIFFICULTIES.map(d=>`<option value="${d}">${d}</option>`).join("")}</select></div>`:""}
+        ${!isHomework?`<div><label for="countInput">何問やる？</label><select id="countInput"><option value="1">1問だけ</option><option value="3">3問</option><option value="5" selected>5問</option><option value="10">10問</option><option value="15">15問</option></select></div>`:""}
+        ${course==="test"?`<div style="grid-column:1/-1"><label for="weaknessInput">苦手なところ・心配なところ</label><input id="weaknessInput" placeholder="例：be動詞の否定文、計算ミス、地図問題" /></div>`:""}
+        ${isQuiz?`<div><label for="quizTypeInput">クイズ形式</label><select id="quizTypeInput"><option value="おまかせ">おまかせ</option><option value="一問一答">一問一答</option><option value="4択">4択</option><option value="○×">○×</option><option value="穴埋め">穴埋め</option><option value="英単語">英単語</option><option value="並べ替え">並べ替え</option></select></div>`:""}
+      </div>
+      ${isHomework?`<div style="margin-top:14px"><label for="homeworkText">宿題の内容</label><textarea id="homeworkText" placeholder="宿題の問題文を入力してね。写真でもOK。"></textarea></div><div style="margin-top:12px"><label for="homeworkImage">宿題の写真</label><input id="homeworkImage" type="file" accept="image/*" /><div class="muted small">写真が見えにくい場合は聞き返します。</div></div>`:""}
+      ${isMistakes?`<div class="message bot" style="margin-top:14px">保存されている間違い問題：${state.records.mistakes.length}問（うち復習期限が来ているのは ${dueMistakes().length}問）\n復習期限が近い問題から順に出ます。正解を重ねると 1日→3日→7日→14日→30日 と間隔が伸びて、最後は卒業します。</div>`:""}
+      <div class="row" style="margin-top:16px"><button class="btn primary big" id="startStudyBtn">この内容で始める</button><button class="btn" id="cancelSetup">キャンセル</button></div><div id="setupMessages" class="message-list"></div>`;
+      $("backHomeSetup").addEventListener("click",renderHome);$("cancelSetup").addEventListener("click",renderHome);$("startStudyBtn").addEventListener("click",beginSession);
+      if($("homeworkImage")) $("homeworkImage").addEventListener("change",async e=>{const f=e.target.files&&e.target.files[0];currentImageDataUrl=f?await fileToDataUrl(f):null;addSetupMessage("写真を読み込みました。", "good");});
+    }
+    function addSetupMessage(t,type="bot"){const w=$("setupMessages");if(!w)return;const d=document.createElement("div");d.className=`message ${type}`;d.textContent=t;w.appendChild(d);}
+    function defaultUnit(sub){const g=currentGrade();const math=g==="小学4年生"?"計算":g==="小学5年生"?"小数と倍数":g==="小学6年生"?"速さ・割合":g==="中学2年生"?"連立方程式":g==="中学3年生"?"因数分解":"正負の数";return ({国語:isElementary()?"漢字・ことば":"漢字・文法・読解",数学:math,英語:"英単語",理科:isElementary()?"身近な理科":"身近な理科の用語",社会:isElementary()?"日本の地理・歴史":"地理・歴史の重要語句"})[sub]||`${g}の復習`;}
+
+    async function beginSession(){const course=state.app.selectedCourse;const setup={course};
+      if(course!=="homework") setup.subject=$("subjectInput")?.value||"英語";
+      if(course!=="homework"&&course!=="mistakes"){setup.unit=$("unitInput")?.value.trim()||defaultUnit(setup.subject);setup.difficulty=$("difficultyInput")?.value||"ふつう";}
+      if(course!=="homework") setup.totalQuestions=Number($("countInput")?.value||5); else {setup.totalQuestions=1;setup.homeworkText=$("homeworkText")?.value.trim()||"";setup.homeworkImage=!!currentImageDataUrl;if(!setup.homeworkText&&!currentImageDataUrl){addSetupMessage("宿題の内容を文章で入れるか、写真を選んでね。","warn");return;}}
+      if(course==="test") setup.weakness=$("weaknessInput")?.value.trim()||""; if(course==="quiz") setup.quizType=$("quizTypeInput")?.value||"おまかせ";
+      if(course==="mistakes"&&state.records.mistakes.length===0){addSetupMessage("まだ間違えた問題が保存されていません。","warn");return;}
+      const weak=getWeakAreas(setup.subject).slice(0,3);
+      state.app.session={id:uid("session"),course,subject:setup.subject||"宿題",unit:setup.unit||(course==="mistakes"?"間違い復習":"宿題"),difficulty:setup.difficulty||"ふつう",totalQuestions:setup.totalQuestions,currentIndex:0,score:0,wrong:0,hintUsed:0,combo:0,xpEarned:0,startedAt:new Date().toISOString(),finishedAt:null,questions:[],currentQuestion:null,messages:[],setup,weakAreasAtStart:weak};
+      state.app.screen="study";saveState();renderStudy(true);await loadNextQuestion();
+    }
+
+    function renderStudy(loading=false){const s=state.app.session;if(!s){renderHome();return;}state.app.screen="study";saveState();const done=Math.min(s.currentIndex,s.totalQuestions),pct=s.totalQuestions?Math.round(done/s.totalQuestions*100):0;mainPanel.innerHTML=`
+      <div class="space"><div><h2 class="panel-title">${escapeHtml(COURSE_LABELS[s.course])}</h2><div class="muted small">${escapeHtml(s.subject)} / ${escapeHtml(s.unit)} / ${escapeHtml(s.difficulty)} / ${s.totalQuestions}問</div></div><button class="btn" id="endSessionBtn">今日はここまで</button></div>
+      <div class="progress-wrap"><div class="progress-bar" style="width:${pct}%"></div></div><div class="small muted">進み具合：${done}/${s.totalQuestions}問　✅正解：${s.score}　❌間違い：${s.wrong}　💡ヒント：${s.hintUsed}　⚡獲得XP：${s.xpEarned||0}${(s.combo||0)>=2?`　🔥${s.combo}コンボ中`:""}</div>
+      <div id="studyArea">${loading?`<div class="message bot" style="margin-top:14px"><span class="loader"></span>問題を準備中...</div>`:renderQuestionHtml()}</div>`;
+      $("endSessionBtn").addEventListener("click",finishSession);bindStudyEvents();startBgm();}
+    function renderQuestionHtml(){const s=state.app.session,q=s.currentQuestion;if(!q)return `<div class="message bot" style="margin-top:14px"><span class="loader"></span>問題を準備中...</div>`;
+      const choiceHtml=q.choices?.length?`<div class="choices">${q.choices.map((c,i)=>`<label class="choice"><input type="radio" name="choice" value="${escapeHtml(c)}" /><span><strong>${String.fromCharCode(65+i)}.</strong> ${escapeHtml(c)}</span></label>`).join("")}</div>`:"";
+      const msgs=(s.messages||[]).map(m=>`<div class="message ${escapeHtml(m.type||"bot")}">${escapeHtml(m.text)}</div>`).join("");
+      const ttsBtn=(q.subject==="英語"&&q.uiStage&&(q.tts||/^[a-zA-Z .,'!?-]+$/.test(String(q.correctAnswer))))?`<button class="btn" id="ttsBtn">🔊 発音を聞く</button>`:"";
+      const actions=q.uiStage==="correct"?`<div class="actions-sticky"><div class="row"><button class="btn primary big" id="nextQuestionBtn">次の問題へ ▶</button>${ttsBtn}</div></div>`:q.uiStage==="explain"?`<div class="actions-sticky"><div class="row"><button class="btn good" id="memoryOkBtn">覚えられそう</button><button class="btn" id="memoryEasyBtn">もっと簡単な覚え方</button>${ttsBtn}<button class="btn primary" id="nextQuestionBtn">次の問題へ ▶</button></div></div>`:"";
+      const chat=tutorOpen?`<div class="chat-area"><label for="tutorInput" style="margin-bottom:6px">🙋 先生に質問（この問題について何でも聞いてOK）</label><div class="answer-form" style="margin-top:0"><input id="tutorInput" placeholder="例：なんで x を移項するの？" autocomplete="off" /><button class="btn primary" id="tutorSendBtn">送信</button></div></div>`:"";
+      return `<div class="question-box"><div class="q-meta"><span class="chip">${s.currentIndex+1}問目</span><span class="chip">${escapeHtml(q.subject)}</span><span class="chip">${escapeHtml(q.unit)}</span><span class="chip">${escapeHtml(q.formatLabel||"問題")}</span>${q.isWeakMix?`<span class="chip">🧠 苦手対策</span>`:""}${q.fromMistakeId?`<span class="chip">🔁 復習</span>`:""}</div><div class="q-title">${escapeHtml(q.prompt)}</div>${choiceHtml}${q.note?`<div class="message bot">${escapeHtml(q.note)}</div>`:""}<div class="answer-form"><input id="answerInput" placeholder="答えを入力。わからない時は『わからない』でOK" autocomplete="off" /><button class="btn primary" id="submitAnswerBtn">答える</button></div><div class="row" style="margin-top:10px"><button class="btn" id="hintBtn">💡 ヒントを見る</button><button class="btn warn" id="revealBtn">答えと解説を見る</button><button class="btn" id="tutorToggleBtn">🙋 先生に質問</button></div>${chat}<div class="message-list" id="questionMessages">${msgs}</div>${actions}</div>`;}
+    function bindStudyEvents(){const sub=$("submitAnswerBtn"),inp=$("answerInput");if(sub)sub.addEventListener("click",submitAnswer);if(inp)inp.addEventListener("keydown",e=>{if(e.key==="Enter")submitAnswer();});document.querySelectorAll("input[name='choice']").forEach(r=>r.addEventListener("change",()=>{if(inp)inp.value=r.value;}));if($("hintBtn"))$("hintBtn").addEventListener("click",showHint);if($("revealBtn"))$("revealBtn").addEventListener("click",()=>revealAnswer("答えと解説を表示しました。"));if($("nextQuestionBtn"))$("nextQuestionBtn").addEventListener("click",nextQuestion);if($("memoryOkBtn"))$("memoryOkBtn").addEventListener("click",()=>addSessionMessage("OK！その覚え方で一度声に出して確認してみよう。","good"));if($("memoryEasyBtn"))$("memoryEasyBtn").addEventListener("click",simplifyMemoryTip);if($("tutorToggleBtn"))$("tutorToggleBtn").addEventListener("click",()=>{tutorOpen=!tutorOpen;renderStudy(false);if(tutorOpen&&$("tutorInput"))$("tutorInput").focus();});const ti=$("tutorInput");if($("tutorSendBtn"))$("tutorSendBtn").addEventListener("click",sendTutorQuestion);if(ti)ti.addEventListener("keydown",e=>{if(e.key==="Enter")sendTutorQuestion();});if($("ttsBtn"))$("ttsBtn").addEventListener("click",()=>{const q=state.app.session?.currentQuestion;if(q)speak(q.tts||String(q.correctAnswer));});}
+    function addSessionMessage(t,type="bot"){const s=state.app.session;if(!s)return;s.messages=s.messages||[];s.messages.push({text:t,type,at:new Date().toISOString()});saveState();renderStudy(false);scrollToFeedback();}
+
+    async function sendTutorQuestion(){
+      const s=state.app.session,q=s?.currentQuestion;if(!s||!q)return;
+      const input=$("tutorInput");const text=input?.value.trim();if(!text)return;
+      addSessionMessage(`🙋 質問：${text}`,"user");
+      if(!canUseAI()){addSessionMessage("AI未設定なのでチャットは使えないけど、ヒントボタンを2回まで使えるよ。⚙️AI設定でGeminiの無料APIキーを入れると、先生チャットが使えるようになります。","warn");return;}
+      addSessionMessage("先生が考え中...","bot");
+      try{
+        const data=await callAIJson({task:"tutor_chat",grade:currentGrade(),subject:q.subject,unit:q.unit,questionPrompt:q.prompt,correctAnswer:q.correctAnswer,studentAlreadyAnswered:!!q.answered,studentQuestion:text,hintUsed:q.hintCount,rule:"JSONだけ。messageにgradeの学年向けの返答。まだ回答していない場合は答えを直接言わず考え方に導く。回答済みなら答えを含めて説明してよい。3〜6文で。"});
+        s.messages=s.messages.filter(m=>m.text!=="先生が考え中...");
+        addSessionMessage(`👨‍🏫 先生：${data.message||data.feedback||"うまく答えられなかった。もう一度聞いてみて。"}`,"bot");
+      }catch(e){
+        s.messages=s.messages.filter(m=>m.text!=="先生が考え中...");
+        addSessionMessage(`先生チャットでエラーが出ました：${e.message}`,"warn");
+      }
+    }
+
+    async function loadNextQuestion(){const s=state.app.session;if(!s)return;if(s.currentIndex>=s.totalQuestions){finishSession();return;}s.messages=[];s.currentQuestion=null;tutorOpen=false;saveState();renderStudy(true);let q=null;try{q=await createUniqueQuestion(s);}catch(e){console.warn(e);q=createUniqueFallbackQuestion(s);}s.currentQuestion=normalizeQuestion(q,s);markQuestionSeen(s.currentQuestion);s.questions.push({...s.currentQuestion,shownAt:new Date().toISOString()});saveState();renderStudy(false);scrollToQuestionTop();}
+
+    async function createUniqueQuestion(s){
+      if(s.course==="mistakes") return getMistakeQuestion(s);
+      if(s.course==="homework") return await generateHomeworkQuestion(s);
+      const target=chooseLearningTarget(s);
+      const used=recentSeenList(s.subject,80);
+      for(let attempt=0;attempt<5;attempt++){
+        let q=null;
+        if(canUseAI()) q=await generateAIQuestion(s,target,used,attempt);
+        else q=createRandomQuestion({...s, unit:target.unit, subject:target.subject||s.subject, difficulty:s.difficulty},attempt,target);
+        q=normalizeQuestion(q,{...s,unit:target.unit,subject:target.subject||s.subject});
+        q.isWeakMix=target.isWeakMix;
+        if(target.isWeakMix) q.note="これまでの記録から、苦手対策として少し混ぜた問題です。";
+        if(!isQuestionSeen(q)&&!sessionHasQuestion(s,q)) return q;
+      }
+      return createUniqueFallbackQuestion({...s, unit:target.unit, subject:target.subject||s.subject},target);
+    }
+
+    function chooseLearningTarget(s){
+      if(s.course==="single"){
+        const weak=getWeakAreas(s.subject).filter(w=>w.score>=2);
+        if(weak.length && s.currentIndex>0 && Math.random()<0.45){const w=pick(weak.slice(0,3));return {subject:w.subject,unit:w.unit,isWeakMix:true,reason:"苦手分析"};}
+      }
+      return {subject:s.subject,unit:s.unit,isWeakMix:false,reason:"通常"};
+    }
+
+    function personalContext(subject){
+      const total=state.records.totalAnswered||0,correct=state.records.totalCorrect||0;
+      return {
+        name:state.profile?.name||"",grade:currentGrade(),
+        totalAnswered:total,accuracy:total?Math.round(correct/total*100):null,
+        weakAreas:getWeakAreas(subject).slice(0,5).map(w=>({unit:w.unit,wrong:w.wrong,hints:w.hints,accuracy:Math.round(w.accuracy*100)})),
+        recentMistakes:state.records.mistakes.slice(0,5).map(m=>({subject:m.subject,unit:m.unit,prompt:short(m.question?.prompt,60),studentAnswer:short(m.userAnswer,30)})),
+        streakDays:effectiveStreak()
+      };
+    }
+
+    async function generateAIQuestion(s,target,used,attempt){
+      const payload={task:"generate_unique_question",grade:currentGrade(),course:s.course,subject:target.subject||s.subject,unit:target.unit,difficulty:s.difficulty,questionNumber:s.currentIndex+1,totalQuestions:s.totalQuestions,quizType:s.setup?.quizType||"",weakness:s.setup?.weakness||"",studentProfile:personalContext(s.subject),alreadyUsedQuestions:used,attempt,strictRule:"過去に出した問題と同じ問題・数字だけ同じ問題・答えが同じだけの単純な焼き直しを避ける。シングルコースでは必ず新しい問題にする。studentProfileの苦手・過去の間違え方に寄せて、この生徒専用の問題と解説を作る。",requiredJson:{question:{subject:"",unit:"",difficulty:"",format:"short|choice|fill|word|true_false|order",formatLabel:"",prompt:"",choices:[],correctAnswer:"",acceptableAnswers:[],explanation:"",point:"",memoryTip:"",hints:["普通のヒント","かなりわかりやすいヒント"]}}};
+      const data=await callAIJson(payload);return data.question||data;
+    }
+
+    async function generateHomeworkQuestion(s){
+      const text=s.setup?.homeworkText||"";
+      if(!canUseAI()) return {subject:"宿題",unit:"宿題サポート",format:"support",formatLabel:"宿題サポート",prompt:`宿題の内容：${text||"写真の問題"}\nまず、どこまでわかったか教えてね。答えだけではなく、一緒に考えよう。`,correctAnswer:"生徒の考えを確認する",explanation:"宿題は、まず自分の考えを出してから確認すると力がつきます。",point:"答えを写すより、考え方を説明できることが大切です。",memoryTip:"問題文のキーワードに線を引くつもりで読むと、何を聞かれているか見えやすいです。",hints:["問題文で聞かれていることを1つだけ探そう。","使えそうな言葉や式を1つ書いてみよう。"],choices:[]};
+      const data=await callAIJson({task:"homework_support",grade:currentGrade(),homeworkText:text,hasImage:!!currentImageDataUrl,studentProfile:personalContext(null),rule:"gradeの学年向け。答え丸写しではなく、まず考えさせる質問または問題を1つ作る。見えにくければ聞き返す。JSONだけ。"},currentImageDataUrl);
+      return data.question||data;
+    }
+
+    function createUniqueFallbackQuestion(s,target={}){for(let i=0;i<120;i++){let q=createRandomQuestion(s,i,target);q=normalizeQuestion(q,s);q.isWeakMix=!!target.isWeakMix;if(!isQuestionSeen(q)&&!sessionHasQuestion(s,q))return q;}const q=createRandomQuestion(s,Date.now(),target);q.prompt += `\n※別パターン番号：${Date.now()}`;return q;}
+    function preferredFormat(s){const t=s.setup?.quizType||"";return ({"一問一答":"short","4択":"choice","○×":"true_false","穴埋め":"fill","英単語":"word"})[t]||"";}
+    function createRandomQuestion(s,attempt=0,target={}){const subject=s.subject||"英語";const pf=preferredFormat(s);if(pf==="true_false")return makeTrueFalseQuestion(s);if(subject==="数学")return makeMathQuestion(s);if(subject==="英語")return makeEnglishQuestion(s,pf);if(subject==="国語")return makeJapaneseQuestion(s,pf);if(subject==="理科")return makeScienceQuestion(s,pf);if(subject==="社会")return makeSocialQuestion(s);return makeEnglishQuestion(s,pf);}
+
+    function makeTrueFalseQuestion(s){const base=createRandomQuestion({...s,setup:{...(s.setup||{}),quizType:""}});const useCorrect=Math.random()<0.5;let cand=base.correctAnswer;if(!useCorrect){if(base.choices?.length>1){const others=base.choices.filter(c=>norm(c)!==norm(base.correctAnswer));if(others.length)cand=pick(others);}else if(String(base.correctAnswer).trim()!==""&&!isNaN(Number(base.correctAnswer))){cand=String(Number(base.correctAnswer)+pick([-3,-2,-1,1,2,3]));}}const isTrue=norm(cand)===norm(base.correctAnswer);return {subject:base.subject,unit:base.unit,difficulty:s.difficulty,format:"true_false",formatLabel:"○×",prompt:`○か×で答えよう。\n${base.prompt}\n→ 答えは「${cand}」である。`,choices:[],correctAnswer:isTrue?"○":"×",acceptableAnswers:isTrue?["◯","〇","まる","マル","o","true"]:["✕","ばつ","バツ","x","false"],explanation:`${isTrue?"正しい文です。":"正しくない文です。"}本当の答えは「${base.correctAnswer}」です。\n${base.explanation}`,point:base.point,memoryTip:base.memoryTip,hints:[`本当の答えが「${cand}」で合っているか思い出そう。`,`正しい答えは「${base.correctAnswer}」です。`]};}
+
+    function makeMathQuestion(s){
+      const g=currentGrade();
+      if(g.startsWith("小"))return makeElemMathQuestion(s,g);
+      if(g==="中学2年生")return makeMath2Question(s);
+      if(g==="中学3年生")return makeMath3Question(s);
+      return makeMath1Question(s);
+    }
+    function makeElemMathQuestion(s,grade){
+      const unit=s.unit||"計算";const diff=s.difficulty||"ふつう";const big=diff.includes("むずかし");
+      if(grade==="小学4年生"){
+        const t=pick(["add","mul","div"]);
+        if(t==="add"){const a=rand(100,big?999:499),b=rand(100,big?999:499);return {subject:"数学",unit,difficulty:s.difficulty,format:"short",formatLabel:"たし算",prompt:`${a} + ${b} を計算しよう。`,correctAnswer:String(a+b),explanation:`くらいをそろえて計算すると ${a} + ${b} = ${a+b} です。`,point:"大きい数のたし算は、くらいをそろえて計算しよう。",memoryTip:"一のくらいから順番に、くり上がりに気をつけて。",hints:["ひっ算をイメージして、一のくらいから計算しよう。",`百のくらいまで計算すると ${a+b} に近づくよ。`]};}
+        if(t==="mul"){const a=rand(12,big?99:39),b=rand(2,9);return {subject:"数学",unit,difficulty:s.difficulty,format:"short",formatLabel:"かけ算",prompt:`${a} × ${b} を計算しよう。`,correctAnswer:String(a*b),explanation:`${a} × ${b} = ${a*b} です。${a}を${Math.floor(a/10)*10}と${a%10}に分けて計算すると楽です。`,point:"2けた×1けたは、十のくらいと一のくらいに分けて計算。",memoryTip:`${Math.floor(a/10)*10}×${b} と ${a%10}×${b} に分けて、あとで足そう。`,hints:[`${a}を「${Math.floor(a/10)*10}」と「${a%10}」に分けてみよう。`,`${Math.floor(a/10)*10}×${b}=${Math.floor(a/10)*10*b}、${a%10}×${b}=${(a%10)*b}。合わせると？`]};}
+        const b=rand(2,9),q0=rand(3,big?99:29),r=rand(1,b-1);const a=b*q0+r;return {subject:"数学",unit,difficulty:s.difficulty,format:"short",formatLabel:"わり算",prompt:`${a} ÷ ${b} を計算しよう。（「5あまり2」のように書こう）`,correctAnswer:`${q0}あまり${r}`,acceptableAnswers:[`${q0} あまり ${r}`,`${q0}...${r}`,`${q0}あまり ${r}`],explanation:`${b} × ${q0} = ${b*q0}、${a} - ${b*q0} = ${r} なので、答えは ${q0}あまり${r} です。`,point:"わり算は「わる数×答え＋あまり＝わられる数」で確かめられます。",memoryTip:`確かめ算：${b}×${q0}+${r}=${a} になればOK。`,hints:[`${b}のだんの九九で、${a}に近い数を探そう。`,`${b}×${q0}=${b*q0}。あまりはいくつ？`]};}
+      if(grade==="小学5年生"){
+        const t=pick(["dec_add","dec_mul","lcm"]);
+        if(t==="dec_add"){let ai=rand(11,99),bi=rand(11,99);if((ai+bi)%10===0)bi++;const ans=(ai+bi)/10;return {subject:"数学",unit,difficulty:s.difficulty,format:"short",formatLabel:"小数",prompt:`${ai/10} + ${bi/10} を計算しよう。`,correctAnswer:String(ans),explanation:`小数点の位置をそろえて計算すると ${ai/10} + ${bi/10} = ${ans} です。`,point:"小数のたし算は、小数点をそろえるのがコツ。",memoryTip:"小数点をたてにそろえて、ひっ算しよう。",hints:["小数点の位置をそろえてひっ算しよう。",`整数だと ${ai} + ${bi} = ${ai+bi}。小数点をつけると？`]};}
+        if(t==="dec_mul"){const ai=rand(11,99),b=rand(2,9);const ans=ai*b/10;return {subject:"数学",unit,difficulty:s.difficulty,format:"short",formatLabel:"小数",prompt:`${ai/10} × ${b} を計算しよう。`,correctAnswer:String(ans),explanation:`${ai} × ${b} = ${ai*b}。小数点を1つ左に動かして ${ans} です。`,point:"小数×整数は、整数で計算してから小数点をつけます。",memoryTip:"「小数点を一度忘れて計算→最後に戻す」の2ステップ。",hints:[`まず ${ai} × ${b} を計算してみよう。`,`${ai*b} に小数点をつけると？`]};}
+        const [p,q0,l]=pick([[4,6,12],[6,8,24],[3,5,15],[4,10,20],[6,9,18],[8,12,24]]);return {subject:"数学",unit,difficulty:s.difficulty,format:"short",formatLabel:"倍数",prompt:`${p} と ${q0} の最小公倍数を求めよう。`,correctAnswer:String(l),explanation:`${p}の倍数と${q0}の倍数で、最初に共通する数は ${l} です。`,point:"最小公倍数は、両方の倍数を書き出すと見つかります。",memoryTip:`大きい方（${q0}）の倍数を順に書いて、${p}でわり切れるものを探すと速い。`,hints:[`${q0}の倍数：${q0}, ${q0*2}, ${q0*3}...と書き出そう。`,`その中で${p}でもわり切れる最初の数は？`]};}
+      // 小学6年生
+      const t=pick(["speed","percent","avg"]);
+      if(t==="speed"){const v=rand(3,big?60:40),h=rand(2,5);return {subject:"数学",unit,difficulty:s.difficulty,format:"short",formatLabel:"速さ",prompt:`時速${v}kmで${h}時間進むと、道のりは何kmになる？（数字だけ書こう）`,correctAnswer:String(v*h),acceptableAnswers:[`${v*h}km`],explanation:`道のり＝速さ×時間 なので、${v} × ${h} = ${v*h}km です。`,point:"「み・は・じ」：道のり＝速さ×時間。",memoryTip:"「みはじ」の図を思い出そう。みちのりは上、は・じが下。",hints:["道のり＝速さ×時間 の式を使おう。",`${v} × ${h} を計算しよう。`]};}
+      if(t==="percent"){const base=rand(2,9)*100,w=rand(1,9);return {subject:"数学",unit,difficulty:s.difficulty,format:"short",formatLabel:"割合",prompt:`${base}円の${w}割は何円？（数字だけ書こう）`,correctAnswer:String(base*w/10),acceptableAnswers:[`${base*w/10}円`],explanation:`${w}割は ${w/10} 倍のこと。${base} × ${w/10} = ${base*w/10}円です。`,point:"1割＝0.1倍。○割は×0.○で計算。",memoryTip:`${w}割 → ×0.${w} と置きかえよう。`,hints:[`${w}割は「×0.${w}」のことだよ。`,`${base} × 0.${w} を計算しよう。`]};}
+      const m=rand(5,30);const nums=shuffle([m-2,m,m+2]);return {subject:"数学",unit,difficulty:s.difficulty,format:"short",formatLabel:"平均",prompt:`${nums.join("、")} の3つの数の平均を求めよう。`,correctAnswer:String(m),explanation:`合計は ${m*3}。3でわると平均は ${m} です。`,point:"平均＝合計÷個数。",memoryTip:"「ぜんぶ足して、個数でわる」の2ステップ。",hints:["まず3つの数を全部足そう。",`合計${m*3}を3でわると？`]};
+    }
+    function makeMath2Question(s){
+      const unit=s.unit||"連立方程式";const t=unit.includes("関数")?"func":unit.includes("式")?"expr":pick(["simul","func","expr"]);
+      if(t==="simul"){const x=rand(1,9),y=rand(1,9);return {subject:"数学",unit,difficulty:s.difficulty,format:"short",formatLabel:"連立方程式",prompt:`連立方程式を解こう。\nx + y = ${x+y}\nx - y = ${x-y}\nx の値は？`,correctAnswer:String(x),explanation:`2つの式を足すと 2x = ${2*x} になるので x = ${x}（y = ${y}）です。`,point:"連立方程式は、足すか引くかで文字を1つ消します（加減法）。",memoryTip:"「+y」と「-y」があったら、足せばyが消える。",hints:["2つの式をそのまま足してみよう。yが消えるよ。",`2x = ${2*x} になる。xは？`]};}
+      if(t==="func"){const a=pick([-3,-2,2,3]),b=rand(-5,5),c=rand(-4,4);const y=a*c+b;return {subject:"数学",unit,difficulty:s.difficulty,format:"short",formatLabel:"一次関数",prompt:`一次関数 y = ${a}x ${b>=0?`+ ${b}`:`- ${-b}`} で、x = ${c} のときの y の値は？`,correctAnswer:String(y),explanation:`x に ${c} を代入すると y = ${a}×${c} ${b>=0?`+ ${b}`:`- ${-b}`} = ${y} です。`,point:"一次関数は x に数を代入するだけで y が求められます。",memoryTip:"「代入＝xの席に数を座らせる」イメージ。",hints:[`x のところに ${c} を入れてみよう。`,`${a}×${c} = ${a*c}。あとは ${b>=0?`+${b}`:b} するだけ。`]};}
+      const a=rand(2,9),b=rand(2,9);return {subject:"数学",unit,difficulty:s.difficulty,format:"short",formatLabel:"式の計算",prompt:`${a}a + ${b}a を計算しよう。`,correctAnswer:`${a+b}a`,explanation:`同じ文字どうしは係数を足せるので ${a}a + ${b}a = ${a+b}a です。`,point:"同類項（同じ文字の項）は係数どうしを計算します。",memoryTip:`りんご${a}個＋りんご${b}個＝りんご${a+b}個、と同じ。`,hints:["aは同じ種類のものと考えよう。",`${a} + ${b} を計算して、aをつけよう。`]};}
+    function makeMath3Question(s){
+      const unit=s.unit||"因数分解";const t=unit.includes("平方根")||unit.includes("ルート")?"sqrt":unit.includes("方程式")?"quad":pick(["factor","sqrt","quad"]);
+      if(t==="factor"){const a=rand(1,6),b=rand(1,6);const p=a+b,q0=a*b;const correct=`(x+${a})(x+${b})`;const alt=a===b?correct:`(x+${b})(x+${a})`;const wrongs=[`(x+${a+1})(x+${Math.max(1,b-1)})`,`(x-${a})(x-${b})`,`(x+${p})(x+${q0})`].filter(w=>w!==correct&&w!==alt);const choices=shuffle([correct,...wrongs.slice(0,3)]);return {subject:"数学",unit,difficulty:s.difficulty,format:"choice",formatLabel:"因数分解",prompt:`x² + ${p}x + ${q0} を因数分解すると？`,choices,correctAnswer:correct,acceptableAnswers:[alt],explanation:`足して${p}、かけて${q0}になる2つの数は ${a} と ${b}。よって (x+${a})(x+${b}) です。`,point:"「足して真ん中、かけて最後」の2つの数を探します。",memoryTip:`足して${p}・かけて${q0} → ${a}と${b}、とセットで探そう。`,hints:[`足して${p}、かけて${q0}になる2つの数を探そう。`,`${a} + ${b} = ${p}、${a} × ${b} = ${q0} だね。`]};}
+      if(t==="sqrt"){const n=rand(2,12);return {subject:"数学",unit,difficulty:s.difficulty,format:"short",formatLabel:"平方根",prompt:`√${n*n} はいくつ？`,correctAnswer:String(n),explanation:`${n} × ${n} = ${n*n} なので、√${n*n} = ${n} です。`,point:"√の中が「何かの2乗」なら、√は外せます。",memoryTip:`${n}×${n}=${n*n} を思い出せばOK。`,hints:["同じ数を2回かけて√の中の数になるものを探そう。",`${n} × ${n} = ${n*n} だよ。`]};}
+      const r1=rand(1,6);let r2=rand(1,6);if(r2===r1)r2=r1+1;return {subject:"数学",unit,difficulty:s.difficulty,format:"short",formatLabel:"二次方程式",prompt:`x² - ${r1+r2}x + ${r1*r2} = 0 を解こう。xの値を1つ答えよう。`,correctAnswer:String(r1),acceptableAnswers:[String(r2),`x=${r1}`,`x=${r2}`],explanation:`因数分解すると (x-${r1})(x-${r2}) = 0。よって x = ${r1}, ${r2} です。`,point:"二次方程式は因数分解 →「かけて0なら、どちらかが0」。",memoryTip:`足して${r1+r2}・かけて${r1*r2} → ${r1}と${r2}。`,hints:[`足して${r1+r2}、かけて${r1*r2}になる2つの数を探そう。`,`(x-${r1})(x-${r2})=0 になるよ。`]};}
+    function makeMath1Question(s){const unit=s.unit||"正負の数";const diff=s.difficulty||"ふつう";const lower=diff.includes("やさ")?8:diff.includes("むずかし")?20:15;const types=["add","sub","equation","expression","ratio"];const type=unit.includes("方程式")?"equation":unit.includes("文字")?"expression":unit.includes("比例")?"ratio":pick(types);
+      if(type==="add"){const a=rand(-lower,lower),b=rand(-lower,lower);return {subject:"数学",unit,difficulty:s.difficulty,format:"short",formatLabel:"計算",prompt:`${a} + ${b} を計算しよう。`,correctAnswer:String(a+b),explanation:`${a} に ${b} を足すので、答えは ${a+b} です。マイナスがある時は数直線で考えるとわかりやすいです。`,point:"正負の数は、右に進むとプラス、左に進むとマイナスです。",memoryTip:"プラスは右、マイナスは左、と頭の中で数直線を思い浮かべよう。",hints:[`${a}からスタートして、${b}ぶん動くと考えよう。`,"数直線で、プラスなら右、マイナスなら左に動こう。"]};}
+      if(type==="sub"){const a=rand(-lower,lower),b=rand(-lower,lower);return {subject:"数学",unit,difficulty:s.difficulty,format:"short",formatLabel:"計算",prompt:`${a} - (${b}) を計算しよう。`,correctAnswer:String(a-b),explanation:`${a} - (${b}) は ${a-b} です。マイナスを引く時は符号に注意します。`,point:"引き算は、足し算に直すと考えやすいです。",memoryTip:"『ひく』は反対向きに動く、と覚えよう。",hints:[`まず ${a} から考えます。`,`${b} を引くと、答えは ${a-b} になります。`]};}
+      if(type==="equation"){const x=rand(-8,12),b=rand(-10,10);const c=x+b;return {subject:"数学",unit,difficulty:s.difficulty,format:"short",formatLabel:"方程式",prompt:`x + ${b} = ${c} の x を求めよう。`,correctAnswer:String(x),explanation:`x + ${b} = ${c} なので、両辺から ${b} を引くと x = ${x} です。`,point:"方程式では、xだけを残すように同じ計算を両辺にします。",memoryTip:`+${b} を消すには -${b}、と反対の計算を考えよう。`,hints:["xだけにするには、足されている数を消します。",`${c} - ${b} を計算します。`]};}
+      if(type==="expression"){const price=pick(["a","x","m"]),num=rand(2,9);return {subject:"数学",unit,difficulty:s.difficulty,format:"short",formatLabel:"文字式",prompt:`1個${price}円のノートを${num}個買うと、代金は何円？`,correctAnswer:`${num}${price}`,acceptableAnswers:[`${price}×${num}`,`${num}×${price}`],explanation:`${price}円のものが${num}個なので、${price}×${num} = ${num}${price} 円です。`,point:"文字式では、数を文字の前に書くことが多いです。",memoryTip:`${price}が${num}個で${num}${price}、と声に出そう。`,hints:[`${price}円のものが${num}個あります。`,`${price}+${price}+...を短く書くと？`]};}
+      const x=rand(2,9),k=rand(2,8),y=x*k;return {subject:"数学",unit,difficulty:s.difficulty,format:"short",formatLabel:"比例",prompt:`y は x に比例し、x=${x} のとき y=${y} です。比例定数を求めよう。`,correctAnswer:String(k),explanation:`比例では y=ax です。${y}=a×${x} なので、a=${y}÷${x}=${k} です。`,point:"比例定数は y÷x で求められます。",memoryTip:"比例は y=ax。aは y÷x、とセットで覚えよう。",hints:["比例の式は y=ax です。",`${y} ÷ ${x} を計算します。`]};}
+
+    function makeEnglishQuestion(s,pf=""){const unit=s.unit||"英単語";const words=[["apple","りんご","I eat an apple.","私はりんごを食べます。"],["study","勉強する","I study English.","私は英語を勉強します。"],["book","本","This is my book.","これは私の本です。"],["school","学校","I go to school.","私は学校へ行きます。"],["friend","友達","He is my friend.","彼は私の友達です。"],["music","音楽","I like music.","私は音楽が好きです。"],["breakfast","朝食","I eat breakfast.","私は朝食を食べます。"],["library","図書館","She is in the library.","彼女は図書館にいます。"],["teacher","先生","Our teacher is kind.","私たちの先生は親切です。"],["soccer","サッカー","We play soccer.","私たちはサッカーをします。"]];const [en,ja,ex,exJa]=pick(words);const type=["word","choice","fill"].includes(pf)?pf:pf==="short"?"word":pick(["word","choice","fill"]);const tts=`${en}. ${ex}`;
+      if(type==="choice"){const choices=shuffle([en,...shuffle(words.filter(w=>w[0]!==en).slice(0,3).map(w=>w[0]))]);return {subject:"英語",unit,difficulty:s.difficulty,format:"choice",formatLabel:"4択",prompt:`「${ja}」という意味の英単語はどれ？`,choices,correctAnswer:en,tts,explanation:`「${ja}」は英語で ${en} です。例文：${ex}（${exJa}）`,point:"単語は意味だけでなく、短い例文でも覚えると強いです。",memoryTip:`${en} を3回声に出してから、例文「${ex}」を1回読もう。`,hints:[`意味は「${ja}」です。`,`答えは ${en[0]} から始まります。`]};}
+      if(type==="fill"){return {subject:"英語",unit,difficulty:s.difficulty,format:"fill",formatLabel:"穴埋め",prompt:`空らんに入る英単語を書こう。\n${ex.replace(en,"____")}\n意味：${exJa}`,correctAnswer:en,tts,explanation:`空らんには ${en} が入ります。${en} は「${ja}」という意味です。`,point:"英文の意味から、必要な単語を考えましょう。",memoryTip:`${en} は例文ごと覚えると忘れにくいです：${ex}`,hints:[`日本語の意味の中に「${ja}」があります。`,`答えは ${en[0]} から始まります。`]};}
+      return {subject:"英語",unit,difficulty:s.difficulty,format:"word",formatLabel:"英単語",prompt:`「${ja}」を英語で書こう。`,correctAnswer:en,tts,explanation:`「${ja}」は英語で ${en} です。例文：${ex}（${exJa}）`,point:"英単語は、つづり・意味・例文をセットで覚えましょう。",memoryTip:`${en} を声に出して、例文「${ex}」でもう一度読もう。`,hints:[`例文は「${ex}」です。`,`つづりは ${en[0]} から始まります。`]};}
+
+    function makeJapaneseQuestion(s,pf=""){
+      if(isElementary()){
+        const unit=s.unit||"漢字・ことば";
+        const kanjiE=[["晴天","セイテン","よく晴れた空"],["観察","カンサツ","注意してよく見ること"],["往復","オウフク","行って帰ってくること"],["賛成","サンセイ","人の意見に同意すること"],["節約","セツヤク","むだづかいをしないこと"],["招待","ショウタイ","客として呼ぶこと"],["復習","フクシュウ","習ったことをもう一度勉強すること"],["予習","ヨシュウ","習う前に勉強しておくこと"]];
+        const opposites=[["安全","危険"],["成功","失敗"],["原因","結果"],["生産","消費"],["拡大","縮小"],["理想","現実"]];
+        const useOpp=pf==="choice"?true:pf==="fill"?false:Math.random()<0.4;
+        if(useOpp){const [w,ans]=pick(opposites);const others=shuffle(opposites.flat().filter(x=>x!==w&&x!==ans)).slice(0,3);const choices=shuffle([ans,...others]);return {subject:"国語",unit,difficulty:s.difficulty,format:"choice",formatLabel:"反対語",prompt:`「${w}」と反対の意味の言葉はどれ？`,choices,correctAnswer:ans,explanation:`「${w}」の反対の意味の言葉は「${ans}」です。`,point:"反対語はペアで覚えると両方いっぺんに覚えられます。",memoryTip:`「${w}⇔${ans}」と矢印つきで声に出そう。`,hints:[`「${w}」の意味をまず考えよう。`,`答えは「${ans}」です。`]};}
+        const [ans,read,meaning]=pick(kanjiE);return {subject:"国語",unit,difficulty:s.difficulty,format:"fill",formatLabel:"漢字",prompt:`「${meaning}」を表す言葉です。カタカナを漢字にしよう。\n${read}`,correctAnswer:ans,explanation:`${read} は漢字で「${ans}」と書きます。意味は「${meaning}」です。`,point:"漢字は意味とセットで覚えると忘れにくいです。",memoryTip:`「${ans}」は意味「${meaning}」と一緒に覚えよう。`,hints:[`意味は「${meaning}」です。`,`漢字は「${ans}」です。`]};
+      }
+      const unit=s.unit||"漢字・文法";const grammar=[["走る","動詞","動作を表す言葉"],["美しい","形容詞","様子を表し、言い切りが『い』で終わる言葉"],["静かだ","形容動詞","様子を表し、言い切りが『だ』で終わる言葉"],["学校","名詞","ものや場所の名前を表す言葉"],["読む","動詞","動作を表す言葉"],["楽しい","形容詞","気持ちや様子を表す言葉"]];const kanji=[["登校","トウコウ","学校へ行くこと"],["下校","ゲコウ","学校から帰ること"],["友情","ユウジョウ","友達とのつながり"],["自然","シゼン","山・川・生き物など"],["努力","ドリョク","目標に向かってがんばること"],["協力","キョウリョク","力を合わせること"]];const useGrammar=pf==="choice"?true:pf==="fill"?false:Math.random()<0.5;
+      if(useGrammar){const [word,kind,desc]=pick(grammar);let choices=shuffle([kind,"動詞","形容詞","形容動詞","名詞"].filter((v,i,a)=>a.indexOf(v)===i)).slice(0,4);if(!choices.includes(kind))choices[0]=kind;return {subject:"国語",unit,difficulty:s.difficulty,format:"choice",formatLabel:"文法",prompt:`「${word}」の品詞として正しいものを選ぼう。`,choices:shuffle(choices),correctAnswer:kind,explanation:`「${word}」は${desc}なので、${kind}です。`,point:"品詞は、言葉のはたらきで見分けます。",memoryTip:"『動き？様子？名前？』の3つでまず分けると考えやすいです。",hints:[`「${word}」が何を表しているか考えよう。`,`${desc}です。`]};}
+      const [ans,read,meaning]=pick(kanji);return {subject:"国語",unit,difficulty:s.difficulty,format:"fill",formatLabel:"漢字",prompt:`「${meaning}」を表す言葉です。カタカナを漢字にしよう。\n${read}`,correctAnswer:ans,explanation:`${read} は漢字で「${ans}」と書きます。意味は「${meaning}」です。`,point:"漢字は意味とセットで覚えると忘れにくいです。",memoryTip:`「${ans}」は意味「${meaning}」と一緒に覚えよう。`,hints:[`意味は「${meaning}」です。`,`漢字は「${ans}」です。`]};}
+
+    function makeScienceQuestion(s,pf=""){const unit=s.unit||"理科";const items=isElementary()?[["蒸発","水が空気中に出て水蒸気になること","洗たく物がかわくのは蒸発のおかげ"],["でんぷん","日光が当たった植物の葉にできる養分","ヨウ素液で青むらさき色になる"],["こん虫","体が頭・むね・はらに分かれ、あしが6本ある生き物","あし6本・体3つがポイント"],["鉄","磁石に引きつけられる代表的な金属","10円玉（銅）はつかない"],["水蒸気","水が目に見えないすがたになったもの","湯気は水蒸気が冷えた水のつぶ"],["受粉","花粉がめしべの先につくこと","実ができる第一歩"],["呼吸","空気を吸って酸素を取り入れ、二酸化炭素を出すこと","植物も呼吸している"],["振り子","ひもにおもりをつけてゆらすもの","1往復の時間はひもの長さで決まる"]]:[["光合成","植物が光を使って養分をつくるはたらき","光で合成するから光合成"],["葉緑体","植物の細胞の中で光合成を行う部分","葉の緑のところと考える"],["二酸化炭素","光合成で使われる気体の一つ","はく息にも含まれる気体"],["蒸散","植物の葉から水分が水蒸気として出ていくこと","水が散ると書いて蒸散"],["振動","音が出る原因になるもののふるえ","ギターの弦がふるえるイメージ"],["反射","光が物体に当たってはね返ること","鏡ではね返るイメージ"],["密度","一定の体積あたりの質量","ぎゅっと詰まっている度合い"],["溶解","物質が水などに溶けること","溶けて見えなくなるイメージ"]];const [ans,desc,tip]=pick(items);const useChoice=pf==="choice"?true:pf==="short"?false:Math.random()<0.55;if(useChoice){const choices=shuffle([ans,...shuffle(items.filter(x=>x[0]!==ans).slice(0,3).map(x=>x[0]))]);return {subject:"理科",unit,difficulty:s.difficulty,format:"choice",formatLabel:"4択",prompt:`「${desc}」を表す理科の用語はどれ？`,choices,correctAnswer:ans,explanation:`${desc}ことを「${ans}」といいます。`,point:"理科の用語は、意味と身近な例をセットにすると覚えやすいです。",memoryTip:tip,hints:["説明文の大事な言葉を見つけよう。",`答えは「${ans}」です。`]};}return {subject:"理科",unit,difficulty:s.difficulty,format:"short",formatLabel:"用語",prompt:`${desc}を何という？`,correctAnswer:ans,explanation:`${desc}ことを「${ans}」といいます。`,point:"用語だけでなく、どういうことかを説明できると強いです。",memoryTip:tip,hints:["身近な例で考えてみよう。",`答えは「${ans}」です。`]};}
+
+    function makeSocialQuestion(s){const unit=s.unit||"社会";const items=isElementary()?[["北海道","日本でいちばん面積が大きい都道府県","地図のいちばん上"],["琵琶湖","日本でいちばん大きい湖","滋賀県にある"],["信濃川","日本でいちばん長い川","長野県から新潟県へ流れる"],["富士山","日本でいちばん高い山","高さ3776m"],["縄文時代","狩りや採集で暮らし、縄目の文様の土器を使った時代","縄の文様だから縄文"],["卑弥呼","邪馬台国の女王","占いで国を治めた"],["米づくり","日本の農業の中心。東北地方や新潟県がさかん","「日本の米どころ」とセットで覚える"],["国会","法律を決める国の機関","国のルールを決める場所"]]:[["東京","日本の首都","日本の政治の中心"],["縄文土器","縄目の文様がついた土器","縄の文様だから縄文土器"],["弥生土器","弥生時代に使われた薄くてかための土器","時代名とセットで覚える"],["稲作","米を作る農業","弥生時代に広がったこととセット"],["赤道","地球を北半球と南半球に分ける緯度0度の線","地球の真ん中の横線"],["本初子午線","経度0度の線","イギリスのグリニッジを通る線"],["聖徳太子","十七条の憲法や冠位十二階で知られる人物","政治のしくみを整えた人物"],["大化の改新","645年に始まった政治改革","むしごろし645で覚えることが多い"]];const [ans,desc,tip]=pick(items);const choices=shuffle([ans,...shuffle(items.filter(x=>x[0]!==ans).slice(0,3).map(x=>x[0]))]);return {subject:"社会",unit,difficulty:s.difficulty,format:"choice",formatLabel:"4択",prompt:`「${desc}」として正しいものを選ぼう。`,choices,correctAnswer:ans,explanation:`「${desc}」にあたる答えは「${ans}」です。`,point:"社会は、用語だけでなく理由やつながりとセットで覚えましょう。",memoryTip:tip,hints:["説明のキーワードに注目しよう。",`答えは「${ans}」です。`]};}
+
+    function getMistakeQuestion(s){const list=state.records.mistakes.filter(m=>!s.subject||m.subject===s.subject);const pool=(list.length?list:state.records.mistakes).slice().sort((a,b)=>new Date(a.srs?.dueAt||0)-new Date(b.srs?.dueAt||0));const used=s.questions.map(q=>q.fromMistakeId).filter(Boolean);const candidates=pool.filter(m=>!used.includes(m.id));const arr=candidates.length?candidates:pool;const item=arr[s.currentIndex%arr.length];return {...item.question,id:uid("review"),note:"これは前に間違えた問題です。もう一度チャレンジしよう。",fromMistakeId:item.id};}
+    function normalizeQuestion(q,s){return {id:q.id||uid("q"),subject:q.subject||s.subject,unit:q.unit||s.unit,difficulty:q.difficulty||s.difficulty,format:q.format||"short",formatLabel:q.formatLabel||labelFormat(q.format||"short"),prompt:q.prompt||q.question||"問題を作れませんでした。",choices:Array.isArray(q.choices)?q.choices:[],correctAnswer:q.correctAnswer??q.answer??"",acceptableAnswers:Array.isArray(q.acceptableAnswers)?q.acceptableAnswers:[],explanation:q.explanation||"答えだけでなく、考え方を確認しましょう。",point:q.point||"問題文をよく読み、何を聞かれているかを確認しましょう。",memoryTip:q.memoryTip||"問題と答えをセットで声に出すと覚えやすいです。",hints:Array.isArray(q.hints)&&q.hints.length>=2?q.hints.slice(0,2):[q.hint1||"まず問題文の大事な言葉を探そう。",q.hint2||"答えに関係する部分を1つずつ確認しよう。"],hintCount:0,answered:false,userAnswer:"",lastJudgement:null,uiStage:null,tts:q.tts||"",note:q.note||"",isWeakMix:!!q.isWeakMix,fromMistakeId:q.fromMistakeId||null};}
+    function labelFormat(f){return ({short:"記述",choice:"選択",true_false:"○×",fill:"穴埋め",word:"英単語",order:"並べ替え",support:"サポート"})[f]||"問題";}
+
+    function questionFingerprint(q){return norm(`${q.subject}|${q.unit}|${q.prompt}|${q.choices?.join("|")||""}|${q.correctAnswer}`).replace(/[^a-z0-9ぁ-んァ-ヶ一-龠ー+-]/g,"").slice(0,260);}
+    function seenBucket(subject){state.records.seenQuestions=state.records.seenQuestions||{};state.records.seenQuestions[subject]=state.records.seenQuestions[subject]||[];return state.records.seenQuestions[subject];}
+    function isQuestionSeen(q){const fp=questionFingerprint(q);return seenBucket(q.subject).some(x=>x.fp===fp);}
+    function sessionHasQuestion(s,q){const fp=questionFingerprint(q);return (s.questions||[]).some(old=>questionFingerprint(old)===fp);}
+    function markQuestionSeen(q){const fp=questionFingerprint(q);const bucket=seenBucket(q.subject);if(!bucket.some(x=>x.fp===fp)) bucket.unshift({fp,prompt:q.prompt,answer:q.correctAnswer,unit:q.unit,at:new Date().toISOString()});state.records.seenQuestions[q.subject]=bucket.slice(0,400);}
+    function recentSeenList(subject,n=50){return seenBucket(subject).slice(0,n).map(x=>({unit:x.unit,prompt:x.prompt,answer:x.answer}));}
+
+    async function submitAnswer(){const s=state.app.session,q=s?.currentQuestion;if(!s||!q)return;if(q.answered&&q.lastJudgement?.isCorrect){addSessionMessage("この問題はもう正解しているよ。「次の問題へ」で進もう。","warn");return;}const input=$("answerInput");let answer=input?.value.trim()||"";const checked=document.querySelector("input[name='choice']:checked");if(checked&&!answer)answer=checked.value;if(!answer){addSessionMessage("答えを入力してね。わからない時は『わからない』でOK。","warn");return;}if(isDontKnow(answer)){showHint();return;}q.userAnswer=answer;q.answered=true;saveState();renderStudy(false);addSessionMessage(`あなたの答え：${answer}`,"user");let judgement;try{judgement=await judgeAnswer(q,answer);}catch(e){judgement=localJudge(q,answer);}q.lastJudgement=judgement;recordAnswer(q,judgement);
+      showJudgeFx(judgement.isCorrect);if(judgement.isCorrect)sfxCorrect();else sfxWrong();
+      if(judgement.isCorrect){s.score++;s.combo=(s.combo||0)+1;updateMastery(q,true,q.hintCount);let extra="";if(q.fromMistakeId){const r=advanceSrs(q.fromMistakeId);if(r==="graduated"){extra="\n\n🎉 この問題は復習リストから卒業！よくがんばった！";addXp(20,s);}else if(r==="advanced")extra="\n\n📆 よくできた！この問題の次の復習は少し先になります。";}
+        const xp=xpForCorrect(q,s);addXp(xp,s);
+        let gameLine=`\n\n⚡ +${xp}XP`;if((s.combo||0)>=2)gameLine+=`　🔥 ${s.combo}コンボ！`;
+        const simple=q.hintCount===0&&!judgement.needsLongExplanation;q.uiStage="correct";addSessionMessage((simple?`正解！いい感じ。${judgement.shortPoint?"\n"+judgement.shortPoint:""}`:`正解！\n\n${judgement.feedback||"考え方も近いです。"}\n\nポイント：${judgement.point||q.point}`)+extra+gameLine,"good");}
+      else{s.wrong++;s.combo=0;updateMastery(q,false,q.hintCount);saveMistake(q,answer,judgement);addXp(2,s);q.uiStage="explain";addSessionMessage(`惜しい。ここが少し違うよ。\n\n${judgement.feedback||"答えをもう一度確認してみよう。"}\n\n答え：${q.correctAnswer}\n\n解説：${judgement.explanation||q.explanation}\n\nポイント：${judgement.point||q.point}\n\n覚え方：${judgement.memoryTip||q.memoryTip}\n\nこの覚え方で覚えられそう？\n\n⚡ 挑戦ボーナス +2XP`,"bad");}
+      checkBadges();saveState();}
+    async function judgeAnswer(q,answer){const local=localJudge(q,answer);if(local.confident||!canUseAI())return local;const data=await callAIJson({task:"judge_answer",grade:currentGrade(),question:q.prompt,subject:q.subject,unit:q.unit,correctAnswer:q.correctAnswer,acceptableAnswers:q.acceptableAnswers,userAnswer:answer,hintUsed:q.hintCount,rule:"JSONだけ。isCorrect, feedback, explanation, point, memoryTip, shortPoint, needsLongExplanationを返す。gradeの学年向けの言葉で。"});return {isCorrect:!!data.isCorrect,confident:true,feedback:data.feedback||"答えを確認しました。",explanation:data.explanation||q.explanation,point:data.point||q.point,memoryTip:data.memoryTip||q.memoryTip,shortPoint:data.shortPoint||"",needsLongExplanation:!!data.needsLongExplanation};}
+    function localJudge(q,answer){const a=norm(answer);const cs=[q.correctAnswer,...(q.acceptableAnswers||[])].map(norm).filter(Boolean);let ok=cs.some(c=>a===c||a.replace(/[。,.、]/g,"")===c.replace(/[。,.、]/g,""));if(!ok&&q.choices?.length){const idx=["a","b","c","d","1","2","3","4","ア","イ","ウ","エ"].indexOf(a);if(idx>=0&&q.choices[idx])ok=cs.includes(norm(q.choices[idx]));}return {isCorrect:ok,confident:q.format!=="essay"&&cs.length>0,feedback:ok?"答えが合っています。":"正しい答えと少し違います。",explanation:q.explanation,point:q.point,memoryTip:q.memoryTip,shortPoint:ok?"この調子で次へ進もう。":"",needsLongExplanation:!ok||q.hintCount>0};}
+
+    function recordAnswer(q,j){state.records.totalAnswered++;if(j.isCorrect)state.records.totalCorrect++;bumpDaily();const s=state.app.session;state.records.history.unshift({id:uid("hist"),at:new Date().toISOString(),course:s.course,subject:q.subject,unit:q.unit,prompt:q.prompt,userAnswer:q.userAnswer,correctAnswer:q.correctAnswer,isCorrect:j.isCorrect,hintCount:q.hintCount,isWeakMix:q.isWeakMix});state.records.history=state.records.history.slice(0,160);saveState();}
+    function masteryKey(subject,unit){return `${subject}__${unit}`;}
+    function updateMastery(q,isCorrect,hints){state.records.mastery=state.records.mastery||{};const key=masteryKey(q.subject,q.unit);const m=state.records.mastery[key]||{subject:q.subject,unit:q.unit,total:0,correct:0,wrong:0,hints:0,lastAt:null};m.total++;if(isCorrect)m.correct++;else m.wrong++;m.hints+=hints||0;m.lastAt=new Date().toISOString();state.records.mastery[key]=m;}
+    function getWeakAreas(subject=null){const rows=Object.values(state.records.mastery||{}).filter(m=>!subject||m.subject===subject).map(m=>({...m,score:(m.wrong*3)+(m.hints*1.5)-m.correct,accuracy:m.total?m.correct/m.total:0}));return rows.filter(m=>m.total>=1&&(m.wrong>0||m.hints>0)).sort((a,b)=>b.score-a.score);}
+    function saveMistake(q,answer,j){const fp=questionFingerprint(q);const exists=state.records.mistakes.find(m=>m.fp===fp);const item={id:exists?.id||uid("mistake"),fp,at:new Date().toISOString(),subject:q.subject,unit:q.unit,userAnswer:answer,correctAnswer:q.correctAnswer,explanation:j.explanation||q.explanation,srs:{step:0,dueAt:addDays(new Date(),SRS_INTERVALS[0]).toISOString()},question:{...q,id:uid("mistake_q"),note:"",hintCount:0,answered:false,userAnswer:"",lastJudgement:null,uiStage:null}};if(exists)Object.assign(exists,item);else state.records.mistakes.unshift(item);state.records.mistakes=state.records.mistakes.slice(0,120);saveState();}
+
+    function showHint(){const s=state.app.session,q=s?.currentQuestion;if(!q)return;if(q.hintCount<2){const hint=q.hints[q.hintCount]||"もう一度、問題文の大事な言葉を見てみよう。";q.hintCount++;s.hintUsed++;state.records.totalHints++;addSessionMessage(`${q.hintCount===1?"💡ヒント1":"💡ヒント2"}：${hint}`,"bot");saveState();}else revealAnswer("2つのヒントを使ったので、答えと解説を確認します。");}
+    function revealAnswer(prefix="答えと解説です。"){const s=state.app.session,q=s?.currentQuestion;if(!q)return;if(!q.answered)sfxWrong();if(!q.answered){q.answered=true;q.userAnswer="答えを表示";s.wrong++;s.combo=0;recordAnswer(q,{isCorrect:false});updateMastery(q,false,q.hintCount);saveMistake(q,"答えを表示",{explanation:q.explanation});}q.uiStage="explain";addSessionMessage(`${prefix}\n\n答え：${q.correctAnswer}\n\n解説：${q.explanation}\n\nポイント：${q.point}\n\n覚え方：${q.memoryTip}\n\nこの覚え方で覚えられそう？`,"warn");saveState();}
+    async function simplifyMemoryTip(){const q=state.app.session?.currentQuestion;if(!q)return;if(!canUseAI()){addSessionMessage("もっと簡単にすると、『答えを3回声に出す → 見ないで1回言う』だけでOK。","bot");return;}try{const data=await callAIJson({task:"simplify_memory_tip",grade:currentGrade(),subject:q.subject,unit:q.unit,question:q.prompt,answer:q.correctAnswer,currentMemoryTip:q.memoryTip,rule:"JSONだけ。memoryTipをgradeの学年向けにもっと簡単に返す。"});q.memoryTip=data.memoryTip||data.message||q.memoryTip;addSessionMessage(`もっと簡単な覚え方：${q.memoryTip}\n\nこれなら覚えられそう？`,"bot");}catch{addSessionMessage("もっと簡単にすると、『答えを3回声に出す → 見ないで1回言う』だけでOK。","bot");}saveState();}
+    async function nextQuestion(){const s=state.app.session;if(!s)return;s.currentIndex++;s.currentQuestion=null;s.messages=[];tutorOpen=false;saveState();if(s.currentIndex>=s.totalQuestions)finishSession();else{renderStudy(true);await loadNextQuestion();}}
+    function finishSession(){const s=state.app.session;if(!s){renderHome();return;}s.finishedAt=new Date().toISOString();if(s.totalQuestions>=5&&s.score===s.totalQuestions&&s.wrong===0)state.records.hadPerfect=true;checkBadges();state.records.history.unshift({id:uid("session_result"),at:new Date().toISOString(),course:s.course,subject:s.subject,unit:s.unit,isSessionResult:true,prompt:`${COURSE_LABELS[s.course]}を終了`,userAnswer:`${s.totalQuestions}問中 ${s.score}問正解`,correctAnswer:`間違い ${s.wrong}問 / ヒント ${s.hintUsed}回`,isCorrect:s.wrong===0,hintCount:s.hintUsed});state.records.history=state.records.history.slice(0,160);state.app.screen="result";saveState();renderResult();}
+    function renderResult(){stopBgm();const s=state.app.session;if(!s){renderHome();return;}const acc=s.totalQuestions?Math.round(s.score/s.totalQuestions*100):0;const today=state.records.daily?.[dayKey()]||0,goal=state.settings.dailyGoal||10;
+      const lv=levelFromXp(state.records.xp||0),lvPct=Math.round(lv.into/lv.need*100);
+      mainPanel.innerHTML=`<h2 class="panel-title">📊 今日の学習記録</h2><div class="stat-grid"><div class="stat"><div class="num">${s.totalQuestions}</div><div class="label">問題数</div></div><div class="stat"><div class="num">${s.score}</div><div class="label">正解</div></div><div class="stat"><div class="num">${acc}%</div><div class="label">正答率</div></div><div class="stat"><div class="num" style="color:#f59e0b">+${s.xpEarned||0}</div><div class="label">獲得XP</div></div></div>
+      <div class="dash-item" style="margin-top:12px"><span class="label">${levelTitle(lv.level)}</span><span class="big-num">Lv.${lv.level}</span><div class="xp-bar"><div style="width:${lvPct}%"></div></div><span class="small muted">あと ${lv.need-lv.into}XP でLv.${lv.level+1}</span></div>
+      <div class="message bot" style="margin-top:14px">コース：${escapeHtml(COURSE_LABELS[s.course])}\n教科：${escapeHtml(s.subject)}\n範囲：${escapeHtml(s.unit)}\nヒント使用：${s.hintUsed}回\n🔥 連続学習：${effectiveStreak()}日　🎯 今日：${today}/${goal}問${today>=goal?"（目標達成！）":""}\n⏱️ 今日の勉強時間：${fmtDuration((state.records.dailyTime||{})[dayKey()]||0)}（累計 ${fmtDuration(state.records.studySeconds||0)}）\n\n${escapeHtml(makeAdvice(s))}\n\nこの内容は自動で保存してあります。</div>
+      ${canUseAI()?`<div class="row" style="margin-top:12px"><button class="btn good" id="aiAdviceBtn">🤖 AIコーチの個別アドバイスを見る</button></div><div id="aiAdviceArea" class="message-list"></div>`:""}
+      <div class="row" style="margin-top:14px"><button class="btn primary" id="againSameBtn">同じ設定でもう一度</button><button class="btn" id="reviewWrongFromResult">間違えた問題を復習</button><button class="btn" id="homeFromResult">ホームへ</button></div>`;
+      $("againSameBtn").addEventListener("click",async()=>{const old=state.app.session;state.app.session={...clone(old),id:uid("session"),currentIndex:0,score:0,wrong:0,hintUsed:0,combo:0,xpEarned:0,startedAt:new Date().toISOString(),finishedAt:null,questions:[],currentQuestion:null,messages:[]};state.app.screen="study";saveState();renderStudy(true);await loadNextQuestion();});$("reviewWrongFromResult").addEventListener("click",()=>startSetup("mistakes"));$("homeFromResult").addEventListener("click",renderHome);
+      if($("aiAdviceBtn"))$("aiAdviceBtn").addEventListener("click",showAiAdvice);}
+    async function showAiAdvice(){
+      const s=state.app.session;if(!s)return;const area=$("aiAdviceArea");if(!area)return;
+      area.innerHTML=`<div class="message bot"><span class="loader"></span>AIコーチがあなたの記録を分析中...</div>`;
+      try{
+        const data=await callAIJson({task:"session_advice",session:{course:s.course,subject:s.subject,unit:s.unit,total:s.totalQuestions,correct:s.score,wrong:s.wrong,hints:s.hintUsed,questions:(s.questions||[]).slice(0,15).map(q=>({unit:q.unit,prompt:short(q.prompt,60),correct:q.lastJudgement?q.lastJudgement.isCorrect:null,hintCount:q.hintCount}))},studentProfile:personalContext(s.subject),rule:"JSONだけ。adviceにstudentProfile.gradeの学年の生徒へ名前で話しかける口調で4〜6文。今日の良かった点→間違いの傾向→次に何をどの順番で勉強するか、を具体的に。"});
+        area.innerHTML=`<div class="message good">🤖 AIコーチより\n\n${escapeHtml(data.advice||data.message||"分析結果を作れませんでした。")}</div>`;
+      }catch(e){area.innerHTML=`<div class="message warn">AIアドバイスの取得に失敗：${escapeHtml(e.message)}</div>`;}
+    }
+    function makeAdvice(s){if(s.wrong===0)return "全体的にかなり良い感じ。次は少し難しめでもよさそうです。";if(s.wrong<=2)return "間違えた問題を1回だけ復習すると、かなり定着しやすくなります。";return "今日は間違えた問題が多めなので、同じ範囲をやさしめで復習するのがおすすめです。";}
+
+    function renderSidePanels(){renderTimerPanel();renderResumePanel();renderStatsPanel();renderCalendarPanel();renderMistakesPanel();renderHistoryPanel();}
+    function renderResumePanel(){const s=state.app.session;resumePanel.innerHTML=`<h2 class="panel-title">💾 自動セーブ</h2>${s?`<div class="message bot">現在/前回：\n${escapeHtml(COURSE_LABELS[s.course])}\n${escapeHtml(s.subject)} / ${escapeHtml(s.unit)}\n${s.currentIndex}/${s.totalQuestions}問まで進行</div><div class="row" style="margin-top:10px"><button class="btn primary" id="sideContinue">続きから</button><button class="btn" id="sideNew">新しく始める</button></div>`:`<div class="muted small">まだ保存された学習途中データはありません。</div>`}`;if($("sideContinue"))$("sideContinue").addEventListener("click",()=>{state.app.screen="study";saveState();renderStudy(false);});if($("sideNew"))$("sideNew").addEventListener("click",renderHome);}
+    function renderStatsPanel(){const total=state.records.totalAnswered||0,correct=state.records.totalCorrect||0,acc=total?Math.round(correct/total*100):0;
+      const mastery=Object.values(state.records.mastery||{}).filter(m=>m.total>=2).sort((a,b)=>b.total-a.total).slice(0,5);
+      const bars=mastery.map(m=>{const p=Math.round((m.correct/m.total)*100);const color=p>=80?"#22c55e":p>=50?"#f59e0b":"#ef4444";return `<div class="mastery-row"><div class="m-label"><span>${escapeHtml(m.subject)}／${escapeHtml(short(m.unit,14))}</span><span>${p}%（${m.total}問）</span></div><div class="m-bar"><div style="width:${p}%;background:${color}"></div></div></div>`;}).join("");
+      const lv=levelFromXp(state.records.xp||0);
+      const earned=Object.keys(state.records.badges||{}).length;
+      const badgeHtml=`<div style="margin-top:12px"><div class="small" style="font-weight:700">🏅 実績 ${earned}/${BADGES.length}</div><div class="badge-row">${BADGES.map(b=>`<span class="badge-item ${state.records.badges?.[b.id]?"":"locked"}" title="${escapeHtml(b.name)}：${escapeHtml(b.desc)}">${b.icon}</span>`).join("")}</div></div>`;
+      statsPanel.innerHTML=`<h2 class="panel-title">📈 学習ステータス</h2><div class="dash-item" style="margin-bottom:10px"><span class="label">${levelTitle(lv.level)}</span><span class="big-num">Lv.${lv.level}<span style="font-size:13px;font-weight:600;color:var(--muted)">　${state.records.xp||0}XP</span></span><div class="xp-bar"><div style="width:${Math.round(lv.into/lv.need*100)}%"></div></div></div><div class="stat-grid"><div class="stat"><div class="num">${total}</div><div class="label">解いた数</div></div><div class="stat"><div class="num">${acc}%</div><div class="label">正答率</div></div><div class="stat"><div class="num">🔥${effectiveStreak()}</div><div class="label">連続学習（日）</div></div><div class="stat"><div class="num">${state.records.mistakes.length}</div><div class="label">復習リスト</div></div></div>${bars?`<div style="margin-top:12px"><div class="small" style="font-weight:700">単元別マスター度</div>${bars}</div>`:""}${badgeHtml}`;}
+    function renderCalendarPanel(){
+      const daily=state.records.daily||{};const cells=[];
+      for(let i=27;i>=0;i--){const d=addDays(new Date(),-i);const k=dayKey(d);const n=daily[k]||0;const lv=n===0?0:n<5?1:n<10?2:3;cells.push(`<div class="heat-cell lv${lv}" title="${k}：${n}問"></div>`);}
+      calendarPanel.innerHTML=`<h2 class="panel-title">📅 学習カレンダー（直近28日）</h2><div class="heatmap">${cells.join("")}</div><div class="heat-legend">少ない <i style="background:var(--heat0)"></i><i style="background:var(--heat1)"></i><i style="background:var(--heat2)"></i><i style="background:var(--heat3)"></i> 多い</div>`;}
+    function renderMistakesPanel(){const now=new Date();const items=state.records.mistakes.slice().sort((a,b)=>new Date(a.srs?.dueAt||0)-new Date(b.srs?.dueAt||0)).slice(0,8);
+      mistakesPanel.innerHTML=`<div class="space"><h2 class="panel-title">🔁 間違い復習リスト</h2><button class="btn small" id="clearMistakes">クリア</button></div><div class="mistake-list">${items.length?items.map(m=>{const due=new Date(m.srs?.dueAt||0)<=now;return `<div class="list-item"><strong>${escapeHtml(m.subject)} / ${escapeHtml(m.unit)}${due?`<span class="due-tag">復習期限</span>`:""}</strong>${escapeHtml(short(m.question.prompt,70))}<br><span class="muted">答え：${escapeHtml(short(m.correctAnswer,40))}　次の復習：${m.srs?dateText(m.srs.dueAt).split(" ")[0]||"":""}</span></div>`;}).join(""):`<div class="muted small">まだ間違えた問題はありません。</div>`}</div>`;
+      $("clearMistakes").addEventListener("click",()=>{if(confirm("間違い復習リストを空にしますか？")){state.records.mistakes=[];saveState();}});}
+    function renderHistoryPanel(){const items=state.records.history.slice(0,10);historyPanel.innerHTML=`<div class="space"><h2 class="panel-title">🕘 最近の記録</h2><button class="btn small" id="exportData">書き出し</button></div><div class="history-list">${items.length?items.map(h=>`<div class="list-item"><strong>${escapeHtml(h.subject||COURSE_LABELS[h.course]||"記録")} ${h.isCorrect?"○":"△"}</strong>${escapeHtml(short(h.prompt,70))}<br><span class="muted">${escapeHtml(dateText(h.at))}</span></div>`).join(""):`<div class="muted small">まだ記録はありません。</div>`}</div>`;$("exportData").addEventListener("click",exportData);}
+    function exportData(){const blob=new Blob([JSON.stringify(state,null,2)],{type:"application/json"});const url=URL.createObjectURL(blob);const a=document.createElement("a");a.href=url;a.download=`chuu1-study-bot-${Date.now()}.json`;a.click();URL.revokeObjectURL(url);}
+
+    // ===== AI呼び出し（Gemini / OpenAI互換） =====
+    function canUseAI(){
+      if(!state.settings.aiEnabled)return false;
+      if(state.settings.provider==="gemini")return !!(state.settings.geminiApiKey&&state.settings.geminiModel);
+      return !!(state.settings.apiKey&&state.settings.endpoint&&state.settings.model);
+    }
+    async function callAIJson(payload,imageDataUrl=null){
+      if(state.settings.provider==="gemini")return callGeminiJson(payload,imageDataUrl);
+      return callOpenAIJson(payload,imageDataUrl);
+    }
+    async function callGeminiJson(payload,imageDataUrl=null){
+      const model=state.settings.geminiModel||"gemini-flash-latest";
+      const url=`https://generativelanguage.googleapis.com/v1beta/models/${encodeURIComponent(model)}:generateContent`;
+      const parts=[{text:JSON.stringify(payload,null,2)}];
+      if(imageDataUrl){const m=String(imageDataUrl).match(/^data:(.+?);base64,(.*)$/);if(m)parts.push({inline_data:{mime_type:m[1],data:m[2]}});}
+      const body={system_instruction:{parts:[{text:SYSTEM_PROMPT}]},contents:[{role:"user",parts}],generationConfig:{temperature:0.4,response_mime_type:"application/json"}};
+      let res=await fetch(url,{method:"POST",headers:{"Content-Type":"application/json","x-goog-api-key":state.settings.geminiApiKey},body:JSON.stringify(body)});
+      if(!res.ok){
+        const text=await res.text();
+        if(res.status===400&&(text.includes("response_mime_type")||text.includes("responseMimeType"))){
+          delete body.generationConfig.response_mime_type;
+          res=await fetch(url,{method:"POST",headers:{"Content-Type":"application/json","x-goog-api-key":state.settings.geminiApiKey},body:JSON.stringify(body)});
+          if(!res.ok)throw new Error(geminiErrorMessage(res.status,await res.text()));
+        }else throw new Error(geminiErrorMessage(res.status,text));
+      }
+      const data=await res.json();
+      const textOut=(data.candidates?.[0]?.content?.parts||[]).map(p=>p.text||"").join("");
+      if(!textOut){const reason=data.candidates?.[0]?.finishReason||data.promptFeedback?.blockReason||"";throw new Error(`Geminiから回答が取れませんでした${reason?`（${reason}）`:""}`);}
+      return parseJsonLoose(textOut);
+    }
+    function geminiErrorMessage(status,text){
+      if(status===400&&text.includes("API key not valid"))return "Gemini APIキーが正しくありません。AI設定を確認してね。";
+      if(status===403)return "Gemini APIキーの権限エラーです。AI Studioでキーを再発行してみてください。";
+      if(status===404)return "モデル名が見つかりません。gemini-flash-latest を試してください。";
+      if(status===429)return "無料枠の上限に達しました。少し待つか、明日また使ってください（内蔵問題はそのまま使えます）。";
+      return `Gemini APIエラー：${status} ${short(text,200)}`;
+    }
+    async function callOpenAIJson(payload,imageDataUrl=null){const content=[{type:"text",text:JSON.stringify(payload,null,2)}];if(imageDataUrl)content.push({type:"image_url",image_url:{url:imageDataUrl}});const body={model:state.settings.model,messages:[{role:"system",content:SYSTEM_PROMPT},{role:"user",content}],temperature:0.4,response_format:{type:"json_object"}};let res=await fetch(state.settings.endpoint,{method:"POST",headers:{"Content-Type":"application/json","Authorization":`Bearer ${state.settings.apiKey}`},body:JSON.stringify(body)});if(!res.ok){const text=await res.text();if(text.includes("response_format")||text.includes("unsupported")){delete body.response_format;res=await fetch(state.settings.endpoint,{method:"POST",headers:{"Content-Type":"application/json","Authorization":`Bearer ${state.settings.apiKey}`},body:JSON.stringify(body)});}else throw new Error(`AI API error: ${res.status} ${text}`);}if(!res.ok)throw new Error(`AI API error: ${res.status} ${await res.text()}`);const data=await res.json();const text=data.choices?.[0]?.message?.content||data.output_text||"";return parseJsonLoose(text);}
+    function parseJsonLoose(text){if(typeof text==="object")return text;const raw=String(text||"").trim();try{return JSON.parse(raw);}catch{}const m=raw.match(/\{[\s\S]*\}/);if(m){try{return JSON.parse(m[0]);}catch{}}throw new Error("AIの返答をJSONとして読み取れませんでした");}
+    function fileToDataUrl(file){return new Promise((res,rej)=>{const r=new FileReader();r.onload=()=>res(r.result);r.onerror=rej;r.readAsDataURL(file);});}
+
+    // ===== 設定モーダル =====
+    function syncProviderBoxes(){const p=$("providerInput").value;$("geminiBox").style.display=p==="gemini"?"":"none";$("openaiBox").style.display=p==="openai"?"":"none";}
+    function openSettings(){
+      $("providerInput").value=state.settings.provider||"gemini";
+      $("geminiKeyInput").value=state.settings.geminiApiKey||"";
+      $("geminiModelInput").value=state.settings.geminiModel||"gemini-flash-latest";
+      $("apiKeyInput").value=state.settings.apiKey||"";
+      $("endpointInput").value=state.settings.endpoint||"https://api.openai.com/v1/chat/completions";
+      $("modelInput").value=state.settings.model||"gpt-4.1-mini";
+      $("aiEnabledInput").value=String(state.settings.aiEnabled);
+      $("dailyGoalInput").value=String(state.settings.dailyGoal||10);
+      $("settingsMessage").innerHTML="";syncProviderBoxes();populateVoiceList();$("settingsModal").classList.add("show");}
+    function populateVoiceList(){
+      const sel=$("voiceSelectInput"),info=$("voiceInfo");
+      let vs=[];try{vs=speechSynthesis.getVoices();}catch{}
+      const en=vs.filter(v=>/^en/i.test(v.lang));
+      sel.innerHTML=`<option value="">自動（英語音声を自動選択${enVoice?`：${escapeHtml(enVoice.name)}`:""}）</option>`+en.map(v=>`<option value="${escapeHtml(v.voiceURI)}"${state.settings.voiceURI===v.voiceURI?" selected":""}>${escapeHtml(v.name)}（${escapeHtml(v.lang)}）</option>`).join("");
+      if(!vs.length)info.textContent="⚠️ 音声リストがまだ読み込まれていません。この画面を一度閉じて開き直してみてください。";
+      else if(!en.length)info.textContent=`⚠️ 英語の音声が見つかりません（全${vs.length}件は日本語などのみ）。①Windows設定→時刻と言語→音声認識→「音声を追加」で English (United States) を追加 → ②ブラウザを全部閉じて開き直す、の順で反映されます。ナレーター用の自然な音声はブラウザでは使えません。`;
+      else info.textContent=`✅ 英語音声 ${en.length}件を認識しています。自然な発音のおすすめ：「Online (Natural)」付き（Edge）や「Google US English」（Chrome）。`;
+    }
+    function closeSettings(){$("settingsModal").classList.remove("show");}
+    function saveSettings(){
+      state.settings.provider=$("providerInput").value;
+      state.settings.geminiApiKey=$("geminiKeyInput").value.trim();
+      state.settings.geminiModel=$("geminiModelInput").value.trim()||"gemini-flash-latest";
+      state.settings.apiKey=$("apiKeyInput").value.trim();
+      state.settings.endpoint=$("endpointInput").value.trim()||"https://api.openai.com/v1/chat/completions";
+      state.settings.model=$("modelInput").value.trim()||"gpt-4.1-mini";
+      state.settings.aiEnabled=$("aiEnabledInput").value==="true";
+      state.settings.dailyGoal=Number($("dailyGoalInput").value)||10;
+      state.settings.voiceURI=$("voiceSelectInput")?.value||"";
+      saveState();addSettingsMessage("設定を保存しました。","good");renderAll();}
+    function addSettingsMessage(t,type="bot"){const d=document.createElement("div");d.className=`message ${type}`;d.textContent=t;$("settingsMessage").appendChild(d);}
+    async function testAI(){saveSettings();if(!canUseAI()){addSettingsMessage("APIキーなどが未入力です。設定を確認してください。","warn");return;}addSettingsMessage("AI接続をテスト中...","bot");try{const data=await callAIJson({task:"connection_test",rule:"JSONだけ。messageに短く自己紹介を返す。"});addSettingsMessage(`接続OK：${data.message||"AIから返答がありました。"}`,"good");}catch(e){addSettingsMessage(`接続失敗：${e.message}`,"bad");}}
+
+    $("btnHome").addEventListener("click",renderHome);$("btnSettings").addEventListener("click",openSettings);$("btnReset").addEventListener("click",resetAll);
+    $("btnTheme").addEventListener("click",toggleTheme);$("btnFont").addEventListener("click",toggleFont);$("btnSfx").addEventListener("click",toggleSfx);$("btnBgm").addEventListener("click",toggleBgm);
+    $("closeSettings").addEventListener("click",closeSettings);$("saveSettings").addEventListener("click",saveSettings);$("testAI").addEventListener("click",testAI);
+    $("providerInput").addEventListener("change",syncProviderBoxes);
+    $("clearApiKey").addEventListener("click",()=>{$("apiKeyInput").value="";$("geminiKeyInput").value="";saveSettings();});
+    $("settingsModal").addEventListener("click",e=>{if(e.target.id==="settingsModal")closeSettings();});
+    $("voiceTestBtn").addEventListener("click",()=>{
+      state.settings.voiceURI=$("voiceSelectInput").value||"";
+      speak("Hello! I like apples. Let's study English together!");
+    });
+    $("btnUser").addEventListener("click",openUserModal);
+    $("closeUser").addEventListener("click",closeUserModal);
+    $("userModal").addEventListener("click",e=>{if(e.target.id==="userModal")closeUserModal();});
+    $("addUserBtn").addEventListener("click",()=>{
+      const name=$("newUserName").value.trim();
+      if(!name){alert("名前を入れてね。");return;}
+      if(registry.users.some(u=>u.name===name)){alert("同じ名前のユーザーがいます。別の名前にしてね。");return;}
+      createUser(name,$("newUserGrade").value);
+    });
+    applyDisplayPrefs();
+    renderAll();
+  })();
+  // PWA: Service Worker登録（GitHub Pages等のHTTPS配信時のみ。ローカルfile://では何もしない）
+  if("serviceWorker" in navigator && location.protocol==="https:"){
+    navigator.serviceWorker.register("sw.js").catch(()=>{});
+  }
+  </script>
+</body>
+</html>
