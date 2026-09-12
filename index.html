@@ -326,6 +326,7 @@
     let registry = loadRegistry();
     let state = registry.activeUserId ? loadUserState(registry.activeUserId) : clone(DEFAULT_STATE);
     let currentImageDataUrl = null;
+    const generating=new WeakSet();
     let tutorOpen = false;
     const $ = id => document.getElementById(id);
     const mainPanel = $("mainPanel"), timerPanel = $("timerPanel"), resumePanel = $("resumePanel"), statsPanel = $("statsPanel"), calendarPanel = $("calendarPanel"), mistakesPanel = $("mistakesPanel"), historyPanel = $("historyPanel");
@@ -875,16 +876,21 @@
 
     function renderStudy(loading=false){const s=state.app.session;if(!s){renderHome();return;}state.app.screen="study";saveState();const done=Math.min(s.currentIndex,s.totalQuestions),pct=s.totalQuestions?Math.round(done/s.totalQuestions*100):0;mainPanel.innerHTML=`
       <div class="space"><div><h2 class="panel-title">${escapeHtml(COURSE_LABELS[s.course])}</h2><div class="muted small">${escapeHtml(s.subject)} / ${escapeHtml(s.unit)} / ${escapeHtml(s.difficulty)} / ${s.totalQuestions}問</div></div><button class="btn" id="endSessionBtn">今日はここまで</button></div>
+      ${["single","test","quiz"].includes(s.course)?`<div style="margin-top:12px"><label for="liveDifficulty">次の問題のレベル</label><select id="liveDifficulty">${DIFFICULTIES.map(d=>`<option ${d===s.difficulty?"selected":""}>${d}</option>`).join("")}</select><div class="small muted" id="levelNotice" role="status">変更は次に表示する問題から反映。今の問題と学習記録は残ります。</div></div>`:""}
       <div class="progress-wrap"><div class="progress-bar" style="width:${pct}%"></div></div><div class="small muted">進み具合：${done}/${s.totalQuestions}問　✅正解：${s.score}　❌間違い：${s.wrong}　💡ヒント：${s.hintUsed}　⚡獲得XP：${s.xpEarned||0}${(s.combo||0)>=2?`　🔥${s.combo}コンボ中`:""}</div>
       <div id="studyArea">${loading?`<div class="message bot" style="margin-top:14px"><span class="loader"></span>問題を準備中...</div>`:renderQuestionHtml()}</div>`;
-      $("endSessionBtn").addEventListener("click",finishSession);bindStudyEvents();startBgm();}
-    function renderQuestionHtml(){const s=state.app.session,q=s.currentQuestion;if(!q)return `<div class="message bot" style="margin-top:14px"><span class="loader"></span>問題を準備中...</div>`;
+      $("endSessionBtn").addEventListener("click",finishSession);bindStudyEvents();startBgm();
+      $("liveDifficulty")?.addEventListener("change",e=>{changeDifficulty(s,e.target.value);$("levelNotice").textContent="次の問題から「"+s.difficulty+"」になります。";});
+      $("retryQuestionBtn")?.addEventListener("click",loadNextQuestion);
+    }
+    function changeDifficulty(s,value){if(!DIFFICULTIES.includes(value))return;s.difficulty=value;s.setup.difficulty=value;saveState();}
+    function renderQuestionHtml(){const s=state.app.session,q=s.currentQuestion;if(!q)return `<div class="message ${s.generationError?"warn":"bot"}" role="status" style="margin-top:14px">${escapeHtml(s.generationError||"問題を準備できます。")}</div><button class="btn primary" id="retryQuestionBtn" ${generating.has(s)?"disabled":""}>${generating.has(s)?"準備中…":"問題を生成する"}</button>`;
       const choiceHtml=q.choices?.length?`<div class="choices">${q.choices.map((c,i)=>`<label class="choice"><input type="radio" name="choice" value="${escapeHtml(c)}" /><span><strong>${String.fromCharCode(65+i)}.</strong> ${escapeHtml(c)}</span></label>`).join("")}</div>`:"";
       const msgs=(s.messages||[]).map(m=>`<div class="message ${escapeHtml(m.type||"bot")}">${escapeHtml(m.text)}</div>`).join("");
       const ttsBtn=(q.subject==="英語"&&q.uiStage&&(q.tts||/^[a-zA-Z .,'!?-]+$/.test(String(q.correctAnswer))))?`<button class="btn" id="ttsBtn">🔊 発音を聞く</button>`:"";
       const actions=q.uiStage==="correct"?`<div class="actions-sticky"><div class="row"><button class="btn primary big" id="nextQuestionBtn">次の問題へ ▶</button>${ttsBtn}</div></div>`:q.uiStage==="explain"?`<div class="actions-sticky"><div class="row"><button class="btn good" id="memoryOkBtn">覚えられそう</button><button class="btn" id="memoryEasyBtn">もっと簡単な覚え方</button>${ttsBtn}<button class="btn primary" id="nextQuestionBtn">次の問題へ ▶</button></div></div>`:"";
       const chat=tutorOpen?`<div class="chat-area"><label for="tutorInput" style="margin-bottom:6px">🙋 先生に質問（この問題について何でも聞いてOK）</label><div class="answer-form" style="margin-top:0"><input id="tutorInput" placeholder="例：なんで x を移項するの？" autocomplete="off" /><button class="btn primary" id="tutorSendBtn">送信</button></div></div>`:"";
-      return `<div class="question-box"><div class="q-meta"><span class="chip">${s.currentIndex+1}問目</span><span class="chip">${escapeHtml(q.subject)}</span><span class="chip">${escapeHtml(q.unit)}</span><span class="chip">${escapeHtml(q.formatLabel||"問題")}</span>${q.isWeakMix?`<span class="chip">🧠 苦手対策</span>`:""}${q.fromMistakeId?`<span class="chip">🔁 復習</span>`:""}</div><div class="q-title">${escapeHtml(q.prompt)}</div>${choiceHtml}${q.note?`<div class="message bot">${escapeHtml(q.note)}</div>`:""}<div class="answer-form"><input id="answerInput" placeholder="答えを入力。わからない時は『わからない』でOK" autocomplete="off" /><button class="btn primary" id="submitAnswerBtn">答える</button></div><div class="row" style="margin-top:10px"><button class="btn" id="hintBtn">💡 ヒントを見る</button><button class="btn warn" id="revealBtn">答えと解説を見る</button><button class="btn" id="tutorToggleBtn">🙋 先生に質問</button></div>${chat}<div class="message-list" id="questionMessages">${msgs}</div>${actions}</div>`;}
+      return `<div class="question-box"><div class="q-meta"><span class="chip">${s.currentIndex+1}問目</span><span class="chip">${escapeHtml(q.subject)}</span><span class="chip">${escapeHtml(q.unit)}</span><span class="chip">${escapeHtml(q.formatLabel||"問題")}</span><span class="chip">${escapeHtml(q.difficulty)}</span>${q.isWeakMix?`<span class="chip">🧠 苦手対策</span>`:""}${q.fromMistakeId?`<span class="chip">🔁 復習</span>`:""}</div><div class="q-title">${escapeHtml(q.prompt)}</div>${choiceHtml}${q.note?`<div class="message bot">${escapeHtml(q.note)}</div>`:""}<div class="answer-form"><input id="answerInput" placeholder="答えを入力。わからない時は『わからない』でOK" autocomplete="off" /><button class="btn primary" id="submitAnswerBtn">答える</button></div><div class="row" style="margin-top:10px"><button class="btn" id="hintBtn">💡 ヒントを見る</button><button class="btn warn" id="revealBtn">答えと解説を見る</button><button class="btn" id="tutorToggleBtn">🙋 先生に質問</button></div>${chat}<div class="message-list" id="questionMessages">${msgs}</div>${actions}</div>`;}
     function bindStudyEvents(){const sub=$("submitAnswerBtn"),inp=$("answerInput");if(sub)sub.addEventListener("click",submitAnswer);if(inp)inp.addEventListener("keydown",e=>{if(e.key==="Enter")submitAnswer();});document.querySelectorAll("input[name='choice']").forEach(r=>r.addEventListener("change",()=>{if(inp)inp.value=r.value;}));if($("hintBtn"))$("hintBtn").addEventListener("click",showHint);if($("revealBtn"))$("revealBtn").addEventListener("click",()=>revealAnswer("答えと解説を表示しました。"));if($("nextQuestionBtn"))$("nextQuestionBtn").addEventListener("click",nextQuestion);if($("memoryOkBtn"))$("memoryOkBtn").addEventListener("click",()=>addSessionMessage("OK！その覚え方で一度声に出して確認してみよう。","good"));if($("memoryEasyBtn"))$("memoryEasyBtn").addEventListener("click",simplifyMemoryTip);if($("tutorToggleBtn"))$("tutorToggleBtn").addEventListener("click",()=>{tutorOpen=!tutorOpen;renderStudy(false);if(tutorOpen&&$("tutorInput"))$("tutorInput").focus();});const ti=$("tutorInput");if($("tutorSendBtn"))$("tutorSendBtn").addEventListener("click",sendTutorQuestion);if(ti)ti.addEventListener("keydown",e=>{if(e.key==="Enter")sendTutorQuestion();});if($("ttsBtn"))$("ttsBtn").addEventListener("click",()=>{const q=state.app.session?.currentQuestion;if(q)speak(q.tts||String(q.correctAnswer));});}
     function addSessionMessage(t,type="bot"){const s=state.app.session;if(!s)return;s.messages=s.messages||[];s.messages.push({text:t,type,at:new Date().toISOString()});saveState();renderStudy(false);scrollToFeedback();}
 
@@ -904,23 +910,63 @@
       }
     }
 
-    async function loadNextQuestion(){const s=state.app.session;if(!s)return;if(s.currentIndex>=s.totalQuestions){finishSession();return;}s.messages=[];s.currentQuestion=null;tutorOpen=false;saveState();renderStudy(true);let q=null;try{q=await createUniqueQuestion(s);}catch(e){console.warn(e);q=createUniqueFallbackQuestion(s);}s.currentQuestion=normalizeQuestion(q,s);markQuestionSeen(s.currentQuestion);s.questions.push({...s.currentQuestion,shownAt:new Date().toISOString()});saveState();renderStudy(false);scrollToQuestionTop();}
+    async function loadNextQuestion(){
+      const s=state.app.session;
+      if(!s||generating.has(s)||s.finishedAt)return;
+      if(s.currentIndex>=s.totalQuestions){finishSession();return;}
+      generating.add(s);tutorOpen=false;s.messages=[];s.currentQuestion=null;s.generationError="";
+      saveState();renderStudy(true);
+      try {
+        let q;
+        do {
+          const difficulty=s.difficulty;
+          const snapshot={...s,difficulty,setup:{...s.setup,difficulty}};
+          q=await createUniqueQuestion(snapshot);
+          if(state.app.session!==s||s.finishedAt)return;
+          if(s.difficulty===difficulty)break;
+        } while(true);
+        s.currentQuestion=normalizeQuestion(q,s);
+        markQuestionSeen(s.currentQuestion);
+        s.questions.push({...s.currentQuestion,shownAt:new Date().toISOString()});
+      } catch(e) {
+        if(state.app.session!==s||s.finishedAt)return;
+        s.generationError=e.message;
+      } finally {
+        generating.delete(s);
+        if(state.app.session===s){saveState();if(state.app.screen==="study")renderStudy(false);}
+      }
+    }
 
     async function createUniqueQuestion(s){
-      if(s.course==="mistakes") return getMistakeQuestion(s);
-      if(s.course==="homework") return await generateHomeworkQuestion(s);
-      const target=chooseLearningTarget(s);
-      const used=recentSeenList(s.subject,80);
-      for(let attempt=0;attempt<5;attempt++){
-        let q=null;
-        if(canUseAI()) q=await generateAIQuestion(s,target,used,attempt);
-        else q=createRandomQuestion({...s, unit:target.unit, subject:target.subject||s.subject, difficulty:s.difficulty},attempt,target);
-        q=normalizeQuestion(q,{...s,unit:target.unit,subject:target.subject||s.subject});
-        q.isWeakMix=target.isWeakMix;
-        if(target.isWeakMix) q.note="これまでの記録から、苦手対策として少し混ぜた問題です。";
-        if(!isQuestionSeen(q)&&!sessionHasQuestion(s,q)) return q;
+      if(s.course==="mistakes")return getMistakeQuestion(s);
+      if(s.course==="homework")return await generateHomeworkQuestion(s);
+      const target=chooseLearningTarget(s),used=recentSeenList(s.subject,80);
+      let reason="";
+      if(canUseAI())for(let attempt=0;attempt<3;attempt++){
+        try {
+          const raw=await generateAIQuestion(s,target,used,attempt);
+          validateGeneratedQuestion(raw);
+          const q=normalizeQuestion({...raw,subject:s.subject,difficulty:s.difficulty},{...s,unit:target.unit});
+          q.isWeakMix=target.isWeakMix;
+          q.note=target.isWeakMix?"苦手対策の新しい問題です（AI生成）。":"AI生成の問題です。";
+          if(!isQuestionSeen(q)&&!sessionHasQuestion(s,q))return q;
+          used.push({unit:q.unit,prompt:q.prompt,answer:q.correctAnswer});
+          reason="AIが既出の問題を返したため、未出題の内蔵問題を使っています。";
+        } catch(e){reason=e.message;if(!e.invalidQuestion)break;}
       }
-      return createUniqueFallbackQuestion({...s, unit:target.unit, subject:target.subject||s.subject},target);
+      try {
+        const q=createUniqueFallbackQuestion({...s,unit:target.unit},target);
+        q.note=(reason?reason+"\n":"")+"内蔵問題です。内蔵教材で扱える範囲には限りがあります。";
+        return q;
+      }catch(e){throw new Error((reason?reason+"\n":"")+e.message);}
+    }
+    function validateGeneratedQuestion(q){
+      const fail=()=>{const e=new Error("AIの問題データが不完全です。再生成します。");e.invalidQuestion=true;throw e;};
+      if(!q||typeof q!=="object"||typeof q.prompt!=="string"||!q.prompt.trim()||!(typeof q.correctAnswer==="string"||typeof q.correctAnswer==="number")||!String(q.correctAnswer).trim())fail();
+      if(!Array.isArray(q.hints)||q.hints.length<2||q.hints.some(x=>typeof x!=="string")||typeof q.explanation!=="string"||!q.explanation.trim())fail();
+      if(q.choices!==undefined&&(!Array.isArray(q.choices)||q.choices.some(c=>typeof c!=="string")))fail();
+      if(q.format==="choice"&&(!q.choices||q.choices.length<2))fail();
+      if(q.choices?.length&&(!q.choices.some(c=>norm(c)===norm(q.correctAnswer))||new Set(q.choices.map(norm)).size!==q.choices.length))fail();
     }
 
     function chooseLearningTarget(s){
@@ -943,7 +989,7 @@
     }
 
     async function generateAIQuestion(s,target,used,attempt){
-      const payload={task:"generate_unique_question",grade:currentGrade(),course:s.course,subject:target.subject||s.subject,unit:target.unit,difficulty:s.difficulty,questionNumber:s.currentIndex+1,totalQuestions:s.totalQuestions,quizType:s.setup?.quizType||"",weakness:s.setup?.weakness||"",studentProfile:personalContext(s.subject),alreadyUsedQuestions:used,attempt,strictRule:"過去に出した問題と同じ問題・数字だけ同じ問題・答えが同じだけの単純な焼き直しを避ける。シングルコースでは必ず新しい問題にする。studentProfileの苦手・過去の間違え方に寄せて、この生徒専用の問題と解説を作る。",requiredJson:{question:{subject:"",unit:"",difficulty:"",format:"short|choice|fill|word|true_false|order",formatLabel:"",prompt:"",choices:[],correctAnswer:"",acceptableAnswers:[],explanation:"",point:"",memoryTip:"",hints:["普通のヒント","かなりわかりやすいヒント"]}}};
+      const payload={task:"generate_unique_question",requestId:uid("request"),difficultyGuide:"やさしめ＝基礎を一段階。ふつう＝標準。少しむずかしめ＝指定学年内で複数段階の応用。",grade:currentGrade(),course:s.course,subject:target.subject||s.subject,unit:target.unit,difficulty:s.difficulty,questionNumber:s.currentIndex+1,totalQuestions:s.totalQuestions,quizType:s.setup?.quizType||"",weakness:s.setup?.weakness||"",studentProfile:personalContext(s.subject),alreadyUsedQuestions:used,attempt,strictRule:"過去に出した問題と同じ問題・数字だけ同じ問題・答えが同じだけの単純な焼き直しを避ける。シングルコースでは必ず新しい問題にする。studentProfileの苦手・過去の間違え方に寄せて、この生徒専用の問題と解説を作る。",requiredJson:{question:{subject:"",unit:"",difficulty:"",format:"short|choice|fill|word|true_false|order",formatLabel:"",prompt:"",choices:[],correctAnswer:"",acceptableAnswers:[],explanation:"",point:"",memoryTip:"",hints:["普通のヒント","かなりわかりやすいヒント"]}}};
       const data=await callAIJson(payload);return data.question||data;
     }
 
@@ -954,9 +1000,16 @@
       return data.question||data;
     }
 
-    function createUniqueFallbackQuestion(s,target={}){for(let i=0;i<120;i++){let q=createRandomQuestion(s,i,target);q=normalizeQuestion(q,s);q.isWeakMix=!!target.isWeakMix;if(!isQuestionSeen(q)&&!sessionHasQuestion(s,q))return q;}const q=createRandomQuestion(s,Date.now(),target);q.prompt += `\n※別パターン番号：${Date.now()}`;return q;}
+    function createUniqueFallbackQuestion(s,target={}){
+      for(let i=0;i<500;i++){
+        const q=normalizeQuestion(createRandomQuestion(s,i,target),s);q.isWeakMix=!!target.isWeakMix;
+        if(!isQuestionSeen(q)&&!sessionHasQuestion(s,q))return q;
+      }
+      throw new Error("未出題の内蔵問題を見つけられませんでした。同じ問題は再出題しません。AI設定を確認して再生成するか、ホームから教科・範囲を変更してください。");
+    }
+
     function preferredFormat(s){const t=s.setup?.quizType||"";return ({"一問一答":"short","4択":"choice","○×":"true_false","穴埋め":"fill","英単語":"word"})[t]||"";}
-    function createRandomQuestion(s,attempt=0,target={}){const subject=s.subject||"英語";const pf=preferredFormat(s);if(pf==="true_false")return makeTrueFalseQuestion(s);if(subject==="数学")return makeMathQuestion(s);if(subject==="英語")return makeEnglishQuestion(s,pf);if(subject==="国語")return makeJapaneseQuestion(s,pf);if(subject==="理科")return makeScienceQuestion(s,pf);if(subject==="社会")return makeSocialQuestion(s);return makeEnglishQuestion(s,pf);}
+    function createRandomQuestion(s,attempt=0,target={}){const subject=s.subject||"英語";const pf=preferredFormat(s)||(s.difficulty==="やさしめ"?"choice":s.difficulty==="少しむずかしめ"?"short":"");if(pf==="true_false")return makeTrueFalseQuestion(s);if(subject==="数学")return makeMathQuestion(s);if(subject==="英語")return makeEnglishQuestion(s,pf);if(subject==="国語")return makeJapaneseQuestion(s,pf);if(subject==="理科")return makeScienceQuestion(s,pf);if(subject==="社会")return makeSocialQuestion(s);return makeEnglishQuestion(s,pf);}
 
     function makeTrueFalseQuestion(s){const base=createRandomQuestion({...s,setup:{...(s.setup||{}),quizType:""}});const useCorrect=Math.random()<0.5;let cand=base.correctAnswer;if(!useCorrect){if(base.choices?.length>1){const others=base.choices.filter(c=>norm(c)!==norm(base.correctAnswer));if(others.length)cand=pick(others);}else if(String(base.correctAnswer).trim()!==""&&!isNaN(Number(base.correctAnswer))){cand=String(Number(base.correctAnswer)+pick([-3,-2,-1,1,2,3]));}}const isTrue=norm(cand)===norm(base.correctAnswer);return {subject:base.subject,unit:base.unit,difficulty:s.difficulty,format:"true_false",formatLabel:"○×",prompt:`○か×で答えよう。\n${base.prompt}\n→ 答えは「${cand}」である。`,choices:[],correctAnswer:isTrue?"○":"×",acceptableAnswers:isTrue?["◯","〇","まる","マル","o","true"]:["✕","ばつ","バツ","x","false"],explanation:`${isTrue?"正しい文です。":"正しくない文です。"}本当の答えは「${base.correctAnswer}」です。\n${base.explanation}`,point:base.point,memoryTip:base.memoryTip,hints:[`本当の答えが「${cand}」で合っているか思い出そう。`,`正しい答えは「${base.correctAnswer}」です。`]};}
 
@@ -995,10 +1048,10 @@
       if(t==="factor"){const a=rand(1,6),b=rand(1,6);const p=a+b,q0=a*b;const correct=`(x+${a})(x+${b})`;const alt=a===b?correct:`(x+${b})(x+${a})`;const wrongs=[`(x+${a+1})(x+${Math.max(1,b-1)})`,`(x-${a})(x-${b})`,`(x+${p})(x+${q0})`].filter(w=>w!==correct&&w!==alt);const choices=shuffle([correct,...wrongs.slice(0,3)]);return {subject:"数学",unit,difficulty:s.difficulty,format:"choice",formatLabel:"因数分解",prompt:`x² + ${p}x + ${q0} を因数分解すると？`,choices,correctAnswer:correct,acceptableAnswers:[alt],explanation:`足して${p}、かけて${q0}になる2つの数は ${a} と ${b}。よって (x+${a})(x+${b}) です。`,point:"「足して真ん中、かけて最後」の2つの数を探します。",memoryTip:`足して${p}・かけて${q0} → ${a}と${b}、とセットで探そう。`,hints:[`足して${p}、かけて${q0}になる2つの数を探そう。`,`${a} + ${b} = ${p}、${a} × ${b} = ${q0} だね。`]};}
       if(t==="sqrt"){const n=rand(2,12);return {subject:"数学",unit,difficulty:s.difficulty,format:"short",formatLabel:"平方根",prompt:`√${n*n} はいくつ？`,correctAnswer:String(n),explanation:`${n} × ${n} = ${n*n} なので、√${n*n} = ${n} です。`,point:"√の中が「何かの2乗」なら、√は外せます。",memoryTip:`${n}×${n}=${n*n} を思い出せばOK。`,hints:["同じ数を2回かけて√の中の数になるものを探そう。",`${n} × ${n} = ${n*n} だよ。`]};}
       const r1=rand(1,6);let r2=rand(1,6);if(r2===r1)r2=r1+1;return {subject:"数学",unit,difficulty:s.difficulty,format:"short",formatLabel:"二次方程式",prompt:`x² - ${r1+r2}x + ${r1*r2} = 0 を解こう。xの値を1つ答えよう。`,correctAnswer:String(r1),acceptableAnswers:[String(r2),`x=${r1}`,`x=${r2}`],explanation:`因数分解すると (x-${r1})(x-${r2}) = 0。よって x = ${r1}, ${r2} です。`,point:"二次方程式は因数分解 →「かけて0なら、どちらかが0」。",memoryTip:`足して${r1+r2}・かけて${r1*r2} → ${r1}と${r2}。`,hints:[`足して${r1+r2}、かけて${r1*r2}になる2つの数を探そう。`,`(x-${r1})(x-${r2})=0 になるよ。`]};}
-    function makeMath1Question(s){const unit=s.unit||"正負の数";const diff=s.difficulty||"ふつう";const lower=diff.includes("やさ")?8:diff.includes("むずかし")?20:15;const types=["add","sub","equation","expression","ratio"];const type=unit.includes("方程式")?"equation":unit.includes("文字")?"expression":unit.includes("比例")?"ratio":pick(types);
+    function makeMath1Question(s){const unit=s.unit||"正負の数";const diff=s.difficulty||"ふつう";const lower=diff.includes("やさ")?8:diff.includes("むずかし")?40:15;const types=["add","sub"];const type=unit.includes("方程式")?"equation":unit.includes("文字")?"expression":unit.includes("比例")?"ratio":pick(types);
       if(type==="add"){const a=rand(-lower,lower),b=rand(-lower,lower);return {subject:"数学",unit,difficulty:s.difficulty,format:"short",formatLabel:"計算",prompt:`${a} + ${b} を計算しよう。`,correctAnswer:String(a+b),explanation:`${a} に ${b} を足すので、答えは ${a+b} です。マイナスがある時は数直線で考えるとわかりやすいです。`,point:"正負の数は、右に進むとプラス、左に進むとマイナスです。",memoryTip:"プラスは右、マイナスは左、と頭の中で数直線を思い浮かべよう。",hints:[`${a}からスタートして、${b}ぶん動くと考えよう。`,"数直線で、プラスなら右、マイナスなら左に動こう。"]};}
       if(type==="sub"){const a=rand(-lower,lower),b=rand(-lower,lower);return {subject:"数学",unit,difficulty:s.difficulty,format:"short",formatLabel:"計算",prompt:`${a} - (${b}) を計算しよう。`,correctAnswer:String(a-b),explanation:`${a} - (${b}) は ${a-b} です。マイナスを引く時は符号に注意します。`,point:"引き算は、足し算に直すと考えやすいです。",memoryTip:"『ひく』は反対向きに動く、と覚えよう。",hints:[`まず ${a} から考えます。`,`${b} を引くと、答えは ${a-b} になります。`]};}
-      if(type==="equation"){const x=rand(-8,12),b=rand(-10,10);const c=x+b;return {subject:"数学",unit,difficulty:s.difficulty,format:"short",formatLabel:"方程式",prompt:`x + ${b} = ${c} の x を求めよう。`,correctAnswer:String(x),explanation:`x + ${b} = ${c} なので、両辺から ${b} を引くと x = ${x} です。`,point:"方程式では、xだけを残すように同じ計算を両辺にします。",memoryTip:`+${b} を消すには -${b}、と反対の計算を考えよう。`,hints:["xだけにするには、足されている数を消します。",`${c} - ${b} を計算します。`]};}
+      if(type==="equation"){const x=rand(-lower,lower),b=rand(-lower,lower);const c=x+b;return {subject:"数学",unit,difficulty:s.difficulty,format:"short",formatLabel:"方程式",prompt:`x + ${b} = ${c} の x を求めよう。`,correctAnswer:String(x),explanation:`x + ${b} = ${c} なので、両辺から ${b} を引くと x = ${x} です。`,point:"方程式では、xだけを残すように同じ計算を両辺にします。",memoryTip:`+${b} を消すには -${b}、と反対の計算を考えよう。`,hints:["xだけにするには、足されている数を消します。",`${c} - ${b} を計算します。`]};}
       if(type==="expression"){const price=pick(["a","x","m"]),num=rand(2,9);return {subject:"数学",unit,difficulty:s.difficulty,format:"short",formatLabel:"文字式",prompt:`1個${price}円のノートを${num}個買うと、代金は何円？`,correctAnswer:`${num}${price}`,acceptableAnswers:[`${price}×${num}`,`${num}×${price}`],explanation:`${price}円のものが${num}個なので、${price}×${num} = ${num}${price} 円です。`,point:"文字式では、数を文字の前に書くことが多いです。",memoryTip:`${price}が${num}個で${num}${price}、と声に出そう。`,hints:[`${price}円のものが${num}個あります。`,`${price}+${price}+...を短く書くと？`]};}
       const x=rand(2,9),k=rand(2,8),y=x*k;return {subject:"数学",unit,difficulty:s.difficulty,format:"short",formatLabel:"比例",prompt:`y は x に比例し、x=${x} のとき y=${y} です。比例定数を求めよう。`,correctAnswer:String(k),explanation:`比例では y=ax です。${y}=a×${x} なので、a=${y}÷${x}=${k} です。`,point:"比例定数は y÷x で求められます。",memoryTip:"比例は y=ax。aは y÷x、とセットで覚えよう。",hints:["比例の式は y=ax です。",`${y} ÷ ${x} を計算します。`]};}
 
@@ -1028,14 +1081,22 @@
     function normalizeQuestion(q,s){return {id:q.id||uid("q"),subject:q.subject||s.subject,unit:q.unit||s.unit,difficulty:q.difficulty||s.difficulty,format:q.format||"short",formatLabel:q.formatLabel||labelFormat(q.format||"short"),prompt:q.prompt||q.question||"問題を作れませんでした。",choices:Array.isArray(q.choices)?q.choices:[],correctAnswer:q.correctAnswer??q.answer??"",acceptableAnswers:Array.isArray(q.acceptableAnswers)?q.acceptableAnswers:[],explanation:q.explanation||"答えだけでなく、考え方を確認しましょう。",point:q.point||"問題文をよく読み、何を聞かれているかを確認しましょう。",memoryTip:q.memoryTip||"問題と答えをセットで声に出すと覚えやすいです。",hints:Array.isArray(q.hints)&&q.hints.length>=2?q.hints.slice(0,2):[q.hint1||"まず問題文の大事な言葉を探そう。",q.hint2||"答えに関係する部分を1つずつ確認しよう。"],hintCount:0,answered:false,userAnswer:"",lastJudgement:null,uiStage:null,tts:q.tts||"",note:q.note||"",isWeakMix:!!q.isWeakMix,fromMistakeId:q.fromMistakeId||null};}
     function labelFormat(f){return ({short:"記述",choice:"選択",true_false:"○×",fill:"穴埋め",word:"英単語",order:"並べ替え",support:"サポート"})[f]||"問題";}
 
-    function questionFingerprint(q){return norm(`${q.subject}|${q.unit}|${q.prompt}|${q.choices?.join("|")||""}|${q.correctAnswer}`).replace(/[^a-z0-9ぁ-んァ-ヶ一-龠ー+-]/g,"").slice(0,260);}
-    function seenBucket(subject){state.records.seenQuestions=state.records.seenQuestions||{};state.records.seenQuestions[subject]=state.records.seenQuestions[subject]||[];return state.records.seenQuestions[subject];}
-    function isQuestionSeen(q){const fp=questionFingerprint(q);return seenBucket(q.subject).some(x=>x.fp===fp);}
-    function sessionHasQuestion(s,q){const fp=questionFingerprint(q);return (s.questions||[]).some(old=>questionFingerprint(old)===fp);}
-    function markQuestionSeen(q){const fp=questionFingerprint(q);const bucket=seenBucket(q.subject);if(!bucket.some(x=>x.fp===fp)) bucket.unshift({fp,prompt:q.prompt,answer:q.correctAnswer,unit:q.unit,at:new Date().toISOString()});state.records.seenQuestions[q.subject]=bucket.slice(0,400);}
+    function questionFingerprint(q){
+      return String(q.prompt||"").normalize("NFKC").toLowerCase()
+        .replace(/※別パターン番号：?\d+/g,"").replace(/^第?\d+問[：:．.]?\s*/,"")
+        .replace(/[\s。、？！?!「」『』]/g,"");
+    }
+    function seenBucket(subject){state.records.seenQuestions ||= {};return state.records.seenQuestions[subject] ||= [];}
+    function isQuestionSeen(q){return seenBucket(q.subject).some(old=>questionFingerprint(old)===questionFingerprint(q));}
+    function sessionHasQuestion(s,q){return (s.questions||[]).some(old=>old.subject===q.subject&&questionFingerprint(old)===questionFingerprint(q));}
+    function markQuestionSeen(q){
+      const bucket=seenBucket(q.subject);
+      if(!isQuestionSeen(q))bucket.unshift({fp:questionFingerprint(q),prompt:q.prompt,answer:q.correctAnswer,unit:q.unit,at:new Date().toISOString()});
+    }
+
     function recentSeenList(subject,n=50){return seenBucket(subject).slice(0,n).map(x=>({unit:x.unit,prompt:x.prompt,answer:x.answer}));}
 
-    async function submitAnswer(){const s=state.app.session,q=s?.currentQuestion;if(!s||!q)return;if(q.answered&&q.lastJudgement?.isCorrect){addSessionMessage("この問題はもう正解しているよ。「次の問題へ」で進もう。","warn");return;}const input=$("answerInput");let answer=input?.value.trim()||"";const checked=document.querySelector("input[name='choice']:checked");if(checked&&!answer)answer=checked.value;if(!answer){addSessionMessage("答えを入力してね。わからない時は『わからない』でOK。","warn");return;}if(isDontKnow(answer)){showHint();return;}q.userAnswer=answer;q.answered=true;saveState();renderStudy(false);addSessionMessage(`あなたの答え：${answer}`,"user");let judgement;try{judgement=await judgeAnswer(q,answer);}catch(e){judgement=localJudge(q,answer);}q.lastJudgement=judgement;recordAnswer(q,judgement);
+    async function submitAnswer(){const s=state.app.session,q=s?.currentQuestion;if(!s||!q)return;if(q.answered){addSessionMessage("この問題は回答済みです。「次の問題へ」で進もう。","warn");return;}const input=$("answerInput");let answer=input?.value.trim()||"";const checked=document.querySelector("input[name='choice']:checked");if(checked&&!answer)answer=checked.value;if(!answer){addSessionMessage("答えを入力してね。わからない時は『わからない』でOK。","warn");return;}if(isDontKnow(answer)){showHint();return;}q.userAnswer=answer;q.answered=true;saveState();renderStudy(false);addSessionMessage(`あなたの答え：${answer}`,"user");let judgement;try{judgement=await judgeAnswer(q,answer);}catch(e){judgement=localJudge(q,answer);}if(state.app.session!==s||s.currentQuestion!==q||s.finishedAt)return;q.lastJudgement=judgement;recordAnswer(q,judgement);
       showJudgeFx(judgement.isCorrect);if(judgement.isCorrect)sfxCorrect();else sfxWrong();
       if(judgement.isCorrect){s.score++;s.combo=(s.combo||0)+1;updateMastery(q,true,q.hintCount);let extra="";if(q.fromMistakeId){const r=advanceSrs(q.fromMistakeId);if(r==="graduated"){extra="\n\n🎉 この問題は復習リストから卒業！よくがんばった！";addXp(20,s);}else if(r==="advanced")extra="\n\n📆 よくできた！この問題の次の復習は少し先になります。";}
         const xp=xpForCorrect(q,s);addXp(xp,s);
@@ -1050,12 +1111,12 @@
     function masteryKey(subject,unit){return `${subject}__${unit}`;}
     function updateMastery(q,isCorrect,hints){state.records.mastery=state.records.mastery||{};const key=masteryKey(q.subject,q.unit);const m=state.records.mastery[key]||{subject:q.subject,unit:q.unit,total:0,correct:0,wrong:0,hints:0,lastAt:null};m.total++;if(isCorrect)m.correct++;else m.wrong++;m.hints+=hints||0;m.lastAt=new Date().toISOString();state.records.mastery[key]=m;}
     function getWeakAreas(subject=null){const rows=Object.values(state.records.mastery||{}).filter(m=>!subject||m.subject===subject).map(m=>({...m,score:(m.wrong*3)+(m.hints*1.5)-m.correct,accuracy:m.total?m.correct/m.total:0}));return rows.filter(m=>m.total>=1&&(m.wrong>0||m.hints>0)).sort((a,b)=>b.score-a.score);}
-    function saveMistake(q,answer,j){const fp=questionFingerprint(q);const exists=state.records.mistakes.find(m=>m.fp===fp);const item={id:exists?.id||uid("mistake"),fp,at:new Date().toISOString(),subject:q.subject,unit:q.unit,userAnswer:answer,correctAnswer:q.correctAnswer,explanation:j.explanation||q.explanation,srs:{step:0,dueAt:addDays(new Date(),SRS_INTERVALS[0]).toISOString()},question:{...q,id:uid("mistake_q"),note:"",hintCount:0,answered:false,userAnswer:"",lastJudgement:null,uiStage:null}};if(exists)Object.assign(exists,item);else state.records.mistakes.unshift(item);state.records.mistakes=state.records.mistakes.slice(0,120);saveState();}
+    function saveMistake(q,answer,j){const fp=questionFingerprint(q);const exists=state.records.mistakes.find(m=>m.subject===q.subject&&questionFingerprint(m.question)===fp);const item={id:exists?.id||uid("mistake"),fp,at:new Date().toISOString(),subject:q.subject,unit:q.unit,userAnswer:answer,correctAnswer:q.correctAnswer,explanation:j.explanation||q.explanation,srs:{step:0,dueAt:addDays(new Date(),SRS_INTERVALS[0]).toISOString()},question:{...q,id:uid("mistake_q"),note:"",hintCount:0,answered:false,userAnswer:"",lastJudgement:null,uiStage:null}};if(exists)Object.assign(exists,item);else state.records.mistakes.unshift(item);state.records.mistakes=state.records.mistakes.slice(0,120);saveState();}
 
     function showHint(){const s=state.app.session,q=s?.currentQuestion;if(!q)return;if(q.hintCount<2){const hint=q.hints[q.hintCount]||"もう一度、問題文の大事な言葉を見てみよう。";q.hintCount++;s.hintUsed++;state.records.totalHints++;addSessionMessage(`${q.hintCount===1?"💡ヒント1":"💡ヒント2"}：${hint}`,"bot");saveState();}else revealAnswer("2つのヒントを使ったので、答えと解説を確認します。");}
     function revealAnswer(prefix="答えと解説です。"){const s=state.app.session,q=s?.currentQuestion;if(!q)return;if(!q.answered)sfxWrong();if(!q.answered){q.answered=true;q.userAnswer="答えを表示";s.wrong++;s.combo=0;recordAnswer(q,{isCorrect:false});updateMastery(q,false,q.hintCount);saveMistake(q,"答えを表示",{explanation:q.explanation});}q.uiStage="explain";addSessionMessage(`${prefix}\n\n答え：${q.correctAnswer}\n\n解説：${q.explanation}\n\nポイント：${q.point}\n\n覚え方：${q.memoryTip}\n\nこの覚え方で覚えられそう？`,"warn");saveState();}
     async function simplifyMemoryTip(){const q=state.app.session?.currentQuestion;if(!q)return;if(!canUseAI()){addSessionMessage("もっと簡単にすると、『答えを3回声に出す → 見ないで1回言う』だけでOK。","bot");return;}try{const data=await callAIJson({task:"simplify_memory_tip",grade:currentGrade(),subject:q.subject,unit:q.unit,question:q.prompt,answer:q.correctAnswer,currentMemoryTip:q.memoryTip,rule:"JSONだけ。memoryTipをgradeの学年向けにもっと簡単に返す。"});q.memoryTip=data.memoryTip||data.message||q.memoryTip;addSessionMessage(`もっと簡単な覚え方：${q.memoryTip}\n\nこれなら覚えられそう？`,"bot");}catch{addSessionMessage("もっと簡単にすると、『答えを3回声に出す → 見ないで1回言う』だけでOK。","bot");}saveState();}
-    async function nextQuestion(){const s=state.app.session;if(!s)return;s.currentIndex++;s.currentQuestion=null;s.messages=[];tutorOpen=false;saveState();if(s.currentIndex>=s.totalQuestions)finishSession();else{renderStudy(true);await loadNextQuestion();}}
+    async function nextQuestion(){const s=state.app.session;if(!s||generating.has(s)||!s.currentQuestion?.uiStage||s.finishedAt)return;s.currentIndex++;s.currentQuestion=null;s.messages=[];tutorOpen=false;saveState();if(s.currentIndex>=s.totalQuestions)finishSession();else{renderStudy(true);await loadNextQuestion();}}
     function finishSession(){const s=state.app.session;if(!s){renderHome();return;}s.finishedAt=new Date().toISOString();if(s.totalQuestions>=5&&s.score===s.totalQuestions&&s.wrong===0)state.records.hadPerfect=true;checkBadges();state.records.history.unshift({id:uid("session_result"),at:new Date().toISOString(),course:s.course,subject:s.subject,unit:s.unit,isSessionResult:true,prompt:`${COURSE_LABELS[s.course]}を終了`,userAnswer:`${s.totalQuestions}問中 ${s.score}問正解`,correctAnswer:`間違い ${s.wrong}問 / ヒント ${s.hintUsed}回`,isCorrect:s.wrong===0,hintCount:s.hintUsed});state.records.history=state.records.history.slice(0,160);state.app.screen="result";saveState();renderResult();}
     function renderResult(){stopBgm();const s=state.app.session;if(!s){renderHome();return;}const acc=s.totalQuestions?Math.round(s.score/s.totalQuestions*100):0;const today=state.records.daily?.[dayKey()]||0,goal=state.settings.dailyGoal||10;
       const lv=levelFromXp(state.records.xp||0),lvPct=Math.round(lv.into/lv.need*100);
@@ -1094,7 +1155,7 @@
       mistakesPanel.innerHTML=`<div class="space"><h2 class="panel-title">🔁 間違い復習リスト</h2><button class="btn small" id="clearMistakes">クリア</button></div><div class="mistake-list">${items.length?items.map(m=>{const due=new Date(m.srs?.dueAt||0)<=now;return `<div class="list-item"><strong>${escapeHtml(m.subject)} / ${escapeHtml(m.unit)}${due?`<span class="due-tag">復習期限</span>`:""}</strong>${escapeHtml(short(m.question.prompt,70))}<br><span class="muted">答え：${escapeHtml(short(m.correctAnswer,40))}　次の復習：${m.srs?dateText(m.srs.dueAt).split(" ")[0]||"":""}</span></div>`;}).join(""):`<div class="muted small">まだ間違えた問題はありません。</div>`}</div>`;
       $("clearMistakes").addEventListener("click",()=>{if(confirm("間違い復習リストを空にしますか？")){state.records.mistakes=[];saveState();}});}
     function renderHistoryPanel(){const items=state.records.history.slice(0,10);historyPanel.innerHTML=`<div class="space"><h2 class="panel-title">🕘 最近の記録</h2><button class="btn small" id="exportData">書き出し</button></div><div class="history-list">${items.length?items.map(h=>`<div class="list-item"><strong>${escapeHtml(h.subject||COURSE_LABELS[h.course]||"記録")} ${h.isCorrect?"○":"△"}</strong>${escapeHtml(short(h.prompt,70))}<br><span class="muted">${escapeHtml(dateText(h.at))}</span></div>`).join(""):`<div class="muted small">まだ記録はありません。</div>`}</div>`;$("exportData").addEventListener("click",exportData);}
-    function exportData(){const blob=new Blob([JSON.stringify(state,null,2)],{type:"application/json"});const url=URL.createObjectURL(blob);const a=document.createElement("a");a.href=url;a.download=`chuu1-study-bot-${Date.now()}.json`;a.click();URL.revokeObjectURL(url);}
+    function exportData(){const blob=new Blob([JSON.stringify({...state,settings:{...state.settings,apiKey:"",geminiApiKey:""}},null,2)],{type:"application/json"});const url=URL.createObjectURL(blob);const a=document.createElement("a");a.href=url;a.download=`chuu1-study-bot-${Date.now()}.json`;a.click();URL.revokeObjectURL(url);}
 
     // ===== AI呼び出し（Gemini / OpenAI互換） =====
     function canUseAI(){
@@ -1112,12 +1173,12 @@
       const parts=[{text:JSON.stringify(payload,null,2)}];
       if(imageDataUrl){const m=String(imageDataUrl).match(/^data:(.+?);base64,(.*)$/);if(m)parts.push({inline_data:{mime_type:m[1],data:m[2]}});}
       const body={system_instruction:{parts:[{text:SYSTEM_PROMPT}]},contents:[{role:"user",parts}],generationConfig:{temperature:0.4,response_mime_type:"application/json"}};
-      let res=await fetch(url,{method:"POST",headers:{"Content-Type":"application/json","x-goog-api-key":state.settings.geminiApiKey},body:JSON.stringify(body)});
+      let res=await timedFetch(url,{method:"POST",headers:{"Content-Type":"application/json","x-goog-api-key":state.settings.geminiApiKey},body:JSON.stringify(body)});
       if(!res.ok){
         const text=await res.text();
         if(res.status===400&&(text.includes("response_mime_type")||text.includes("responseMimeType"))){
           delete body.generationConfig.response_mime_type;
-          res=await fetch(url,{method:"POST",headers:{"Content-Type":"application/json","x-goog-api-key":state.settings.geminiApiKey},body:JSON.stringify(body)});
+          res=await timedFetch(url,{method:"POST",headers:{"Content-Type":"application/json","x-goog-api-key":state.settings.geminiApiKey},body:JSON.stringify(body)});
           if(!res.ok)throw new Error(geminiErrorMessage(res.status,await res.text()));
         }else throw new Error(geminiErrorMessage(res.status,text));
       }
@@ -1126,14 +1187,48 @@
       if(!textOut){const reason=data.candidates?.[0]?.finishReason||data.promptFeedback?.blockReason||"";throw new Error(`Geminiから回答が取れませんでした${reason?`（${reason}）`:""}`);}
       return parseJsonLoose(textOut);
     }
+    async function timedFetch(url,options){
+      const controller=new AbortController(),timer=setTimeout(()=>controller.abort(),45000);
+      try{const res=await fetch(url,{...options,signal:controller.signal});const text=await res.text();return {ok:res.ok,status:res.status,text:async()=>text,json:async()=>JSON.parse(text)};}
+      catch(e){if(e.name==="AbortError")throw new Error("AIの応答が45秒以内に届きませんでした。再試行してください。");if(e instanceof TypeError)throw new Error("AIに接続できません。ネット接続とAI設定を確認してください。");throw e;}
+      finally{clearTimeout(timer);}
+    }
     function geminiErrorMessage(status,text){
       if(status===400&&text.includes("API key not valid"))return "Gemini APIキーが正しくありません。AI設定を確認してね。";
       if(status===403)return "Gemini APIキーの権限エラーです。AI Studioでキーを再発行してみてください。";
       if(status===404)return "モデル名が見つかりません。gemini-flash-latest を試してください。";
-      if(status===429)return "無料枠の上限に達しました。少し待つか、明日また使ってください（内蔵問題はそのまま使えます）。";
+      if(status===429)return "APIの利用上限に達しました。時間をおくか、利用枠・残高を確認してください。未出題の内蔵問題があれば続けられます。";
       return `Gemini APIエラー：${status} ${short(text,200)}`;
     }
-    async function callOpenAIJson(payload,imageDataUrl=null){const content=[{type:"text",text:JSON.stringify(payload,null,2)}];if(imageDataUrl)content.push({type:"image_url",image_url:{url:imageDataUrl}});const body={model:state.settings.model,messages:[{role:"system",content:SYSTEM_PROMPT},{role:"user",content}],temperature:0.4,response_format:{type:"json_object"}};let res=await fetch(state.settings.endpoint,{method:"POST",headers:{"Content-Type":"application/json","Authorization":`Bearer ${state.settings.apiKey}`},body:JSON.stringify(body)});if(!res.ok){const text=await res.text();if(text.includes("response_format")||text.includes("unsupported")){delete body.response_format;res=await fetch(state.settings.endpoint,{method:"POST",headers:{"Content-Type":"application/json","Authorization":`Bearer ${state.settings.apiKey}`},body:JSON.stringify(body)});}else throw new Error(`AI API error: ${res.status} ${text}`);}if(!res.ok)throw new Error(`AI API error: ${res.status} ${await res.text()}`);const data=await res.json();const text=data.choices?.[0]?.message?.content||data.output_text||"";return parseJsonLoose(text);}
+    async function callOpenAIJson(payload,imageDataUrl=null){
+      const settings={...state.settings};
+      const content=[{type:"text",text:JSON.stringify(payload)}];
+      if(imageDataUrl)content.push({type:"image_url",image_url:{url:imageDataUrl}});
+      const body={model:settings.model,messages:[{role:"system",content:SYSTEM_PROMPT},{role:"user",content}],response_format:{type:"json_object"}};
+      const controller=new AbortController(),timer=setTimeout(()=>controller.abort(),45000);
+      try {
+        for(let attempt=0;attempt<2;attempt++){
+          const res=await fetch(settings.endpoint,{method:"POST",headers:{"Content-Type":"application/json",Authorization:"Bearer "+settings.apiKey},body:JSON.stringify(body),signal:controller.signal});
+          if(!res.ok){
+            const raw=await res.text();let error={};try{error=JSON.parse(raw).error||{};}catch{}
+            if(attempt===0&&res.status===400&&body.response_format&&(error.param==="response_format"||raw.includes("response_format"))&&/unsupported|not supported|unknown|unrecognized/i.test(raw)){delete body.response_format;continue;}
+            const hint=({401:"APIキーを確認してください。",403:"このAPIを利用する権限を確認してください。",404:"エンドポイントとモデル名を確認してください。",429:"利用上限・残高を確認するか、時間をおいてください。"})[res.status]||"AI設定を確認し、時間をおいて再試行してください。";
+            throw new Error("AI接続失敗（HTTP "+res.status+"）。"+hint);
+          }
+          const data=await res.json(),choice=data.choices?.[0];
+          if(choice?.message?.refusal)throw new Error("AIがこのリクエストに回答できませんでした。");
+          if(choice?.finish_reason==="length")throw new Error("AIの返答が途中で切れました。再試行してください。");
+          const parsed=parseJsonLoose(choice?.message?.content||data.output_text||"");
+          if(!parsed||typeof parsed!=="object"||Array.isArray(parsed))throw new Error("AIが有効なJSONオブジェクトを返しませんでした。");
+          return parsed;
+        }
+      }catch(e){
+        if(e.name==="AbortError")throw new Error("AIの応答が45秒以内に届きませんでした。再試行してください。");
+        if(e instanceof TypeError)throw new Error("AIに接続できません。ネット接続・URL・接続先のブラウザ通信許可（CORS）を確認してください。");
+        throw e;
+      }finally{clearTimeout(timer);}
+    }
+
     function parseJsonLoose(text){if(typeof text==="object")return text;const raw=String(text||"").trim();try{return JSON.parse(raw);}catch{}const m=raw.match(/\{[\s\S]*\}/);if(m){try{return JSON.parse(m[0]);}catch{}}throw new Error("AIの返答をJSONとして読み取れませんでした");}
     function fileToDataUrl(file){return new Promise((res,rej)=>{const r=new FileReader();r.onload=()=>res(r.result);r.onerror=rej;r.readAsDataURL(file);});}
 
